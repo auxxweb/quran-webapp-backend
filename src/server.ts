@@ -11,6 +11,7 @@ import './config/connectDB'
 
 import adminAuthRoute from './routes/admin/authRoutes'
 import adminZoneRoute from './routes/admin/zoneRoutes'
+import adminJudgeRoute from './routes/admin/judgeRoutes'
 
 import { errorHandler, notFound } from "./middlewares/errorMiddlewares";
 import Admin from "./models/admin";
@@ -28,6 +29,7 @@ app.get("/", (req: Request, res: Response) =>
 // Admin Routes
  app.use('/api/admin/auth',adminAuthRoute)
  app.use('/api/admin/zone',adminZoneRoute)
+ app.use('/api/admin/judge',adminJudgeRoute)
 
  const addAdmin = async () => {
   const email = "admin@quranapp.com";

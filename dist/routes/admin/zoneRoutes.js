@@ -9,7 +9,7 @@ const authMiddlewares_1 = require("../../middlewares/authMiddlewares");
 const zoneController_1 = require("../../controllers/admin/zoneController");
 // Zone routes
 router
-    .route("/zone")
+    .route("/")
     .post(authMiddlewares_1.adminProtect, zoneController_1.uploadZoneDetails)
     .patch(authMiddlewares_1.adminProtect, zoneController_1.updateZoneDetails)
     .get(authMiddlewares_1.adminProtect, zoneController_1.getZoneDetails)

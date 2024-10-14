@@ -10,7 +10,7 @@ import {
 
 // Zone routes
 router
-  .route("/zone")
+  .route("/")
   .post(adminProtect, uploadZoneDetails)
   .patch(adminProtect, updateZoneDetails)
   .get(adminProtect, getZoneDetails)

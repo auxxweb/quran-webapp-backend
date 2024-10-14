@@ -16,7 +16,7 @@ export const uploadZoneDetails = asyncHandler(
     const regExp = new RegExp(`^${name}$`);
 
     const existZone = await Zone.findOne({
-      name: { $regex: regExp, $options: "" },
+      name: { $regex: regExp, $options: "" },isDeleted:false
     });
     if (existZone) {
       res.status(400);
@@ -60,7 +60,7 @@ export const updateZoneDetails = asyncHandler(
         const regExp = new RegExp(`^${name}$`);
 
         const existZone = await Zone.findOne({
-          name: { $regex: regExp, $options: "" },
+          name: { $regex: regExp, $options: "" },isDeleted:false
         });
 
         if (existZone) {

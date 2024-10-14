@@ -25,7 +25,7 @@ exports.uploadZoneDetails = (0, express_async_handler_1.default)((req, res) => _
     }
     const regExp = new RegExp(`^${name}$`);
     const existZone = yield zones_1.default.findOne({
-        name: { $regex: regExp, $options: "" },
+        name: { $regex: regExp, $options: "" }, isDeleted: false
     });
     if (existZone) {
         res.status(400);
@@ -62,7 +62,7 @@ exports.updateZoneDetails = (0, express_async_handler_1.default)((req, res) => _
         if (zone.name !== name) {
             const regExp = new RegExp(`^${name}$`);
             const existZone = yield zones_1.default.findOne({
-                name: { $regex: regExp, $options: "" },
+                name: { $regex: regExp, $options: "" }, isDeleted: false
             });
             if (existZone) {
                 res.status(400);
