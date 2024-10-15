@@ -115,13 +115,33 @@ export const deleteParticipantDetails = asyncHandler(
 // GET || get Participant details
 export const getParticipantDetails = asyncHandler(
   async (req: Request, res: Response) => {
-    const participant = await Participant.find({ isDeleted: false }).populate(
-      "zone"
-    );
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const sortBy = (req.query.sortBy as string) || "createdAt";
+    const sortOrder = (req.query.sortOrder as string) === "asc" ? 1 : -1;
+    const searchData = (req.query.search as string) || "";
+    const zones = (req.query.zones as any) || "";
+
+    const query: any = { isDeleted: false };
+    if (searchData !== "") {
+      query.name = { $regex: new RegExp(`^${searchData}.*`, "i") };
+    }
+    if (zones !== "") {
+      query.zone = { $in: zones };
+    }
+
+    const participant = await Participant.find(query)
+      .populate("zone")
+      .sort({ [sortBy]: sortOrder })
+      .skip((page - 1) * limit)
+      .limit(limit);
+    const totalDocuments = await Participant.countDocuments(query);
 
     res.status(200).json({
       success: true,
       participant: participant || [],
+      currentPage: page,
+      totalPages: Math.ceil(totalDocuments / limit),
       msg: "Participant details successfully retrieved",
     });
   }

@@ -25,7 +25,8 @@ exports.uploadZoneDetails = (0, express_async_handler_1.default)((req, res) => _
     }
     const regExp = new RegExp(`^${name}$`);
     const existZone = yield zones_1.default.findOne({
-        name: { $regex: regExp, $options: "" }, isDeleted: false
+        name: { $regex: regExp, $options: "" },
+        isDeleted: false,
     });
     if (existZone) {
         res.status(400);
@@ -62,7 +63,8 @@ exports.updateZoneDetails = (0, express_async_handler_1.default)((req, res) => _
         if (zone.name !== name) {
             const regExp = new RegExp(`^${name}$`);
             const existZone = yield zones_1.default.findOne({
-                name: { $regex: regExp, $options: "" }, isDeleted: false
+                name: { $regex: regExp, $options: "" },
+                isDeleted: false,
             });
             if (existZone) {
                 res.status(400);
@@ -101,10 +103,25 @@ exports.deleteZoneDetails = (0, express_async_handler_1.default)((req, res) => _
 }));
 // GET || get Zone details
 exports.getZoneDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const zones = yield zones_1.default.find({ isDeleted: false });
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const sortBy = req.query.sortBy || "createdAt";
+    const sortOrder = req.query.sortOrder === "asc" ? 1 : -1;
+    const searchData = req.query.search || "";
+    const query = { isDeleted: false };
+    if (searchData !== "") {
+        query.name = { $regex: new RegExp(`^${searchData}.*`, "i") };
+    }
+    const zones = yield zones_1.default.find(query)
+        .sort({ [sortBy]: sortOrder })
+        .skip((page - 1) * limit)
+        .limit(limit);
+    const totalDocuments = yield zones_1.default.countDocuments(query);
     res.status(200).json({
         success: true,
         zones: zones || [],
+        currentPage: page,
+        totalPages: Math.ceil(totalDocuments / limit),
         msg: "Zone details successfully retrieved",
     });
 }));

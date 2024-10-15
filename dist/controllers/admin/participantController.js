@@ -97,10 +97,30 @@ exports.deleteParticipantDetails = (0, express_async_handler_1.default)((req, re
 }));
 // GET || get Participant details
 exports.getParticipantDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const participant = yield participant_1.default.find({ isDeleted: false }).populate("zone");
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const sortBy = req.query.sortBy || "createdAt";
+    const sortOrder = req.query.sortOrder === "asc" ? 1 : -1;
+    const searchData = req.query.search || "";
+    const zones = req.query.zones || "";
+    const query = { isDeleted: false };
+    if (searchData !== "") {
+        query.name = { $regex: new RegExp(`^${searchData}.*`, "i") };
+    }
+    if (zones !== "") {
+        query.zone = { $in: zones };
+    }
+    const participant = yield participant_1.default.find(query)
+        .populate("zone")
+        .sort({ [sortBy]: sortOrder })
+        .skip((page - 1) * limit)
+        .limit(limit);
+    const totalDocuments = yield participant_1.default.countDocuments(query);
     res.status(200).json({
         success: true,
         participant: participant || [],
+        currentPage: page,
+        totalPages: Math.ceil(totalDocuments / limit),
         msg: "Participant details successfully retrieved",
     });
 }));

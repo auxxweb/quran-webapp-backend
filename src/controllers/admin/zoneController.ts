@@ -16,7 +16,8 @@ export const uploadZoneDetails = asyncHandler(
     const regExp = new RegExp(`^${name}$`);
 
     const existZone = await Zone.findOne({
-      name: { $regex: regExp, $options: "" },isDeleted:false
+      name: { $regex: regExp, $options: "" },
+      isDeleted: false,
     });
     if (existZone) {
       res.status(400);
@@ -60,7 +61,8 @@ export const updateZoneDetails = asyncHandler(
         const regExp = new RegExp(`^${name}$`);
 
         const existZone = await Zone.findOne({
-          name: { $regex: regExp, $options: "" },isDeleted:false
+          name: { $regex: regExp, $options: "" },
+          isDeleted: false,
         });
 
         if (existZone) {
@@ -120,11 +122,27 @@ export const deleteZoneDetails = asyncHandler(
 // GET || get Zone details
 export const getZoneDetails = asyncHandler(
   async (req: Request, res: Response) => {
-    const zones = await Zone.find({ isDeleted: false });
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const sortBy = (req.query.sortBy as string) || "createdAt";
+    const sortOrder = (req.query.sortOrder as string) === "asc" ? 1 : -1;
+    const searchData = (req.query.search as string) || "";
+    const query: any = { isDeleted: false };
+    if (searchData !== "") {
+      query.name = { $regex: new RegExp(`^${searchData}.*`, "i") };
+    }
+ 
+    const zones = await Zone.find(query)
+      .sort({ [sortBy]: sortOrder })
+      .skip((page - 1) * limit)
+      .limit(limit);
+    const totalDocuments = await Zone.countDocuments(query);
 
     res.status(200).json({
       success: true,
       zones: zones || [],
+      currentPage: page,
+      totalPages: Math.ceil(totalDocuments / limit),
       msg: "Zone details successfully retrieved",
     });
   }

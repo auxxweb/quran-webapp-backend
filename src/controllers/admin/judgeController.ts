@@ -141,11 +141,36 @@ export const deletejudgeDetails = asyncHandler(
 // GET || get judge details
 export const getJudgeDetails = asyncHandler(
   async (req: Request, res: Response) => {
-    const judge = await Judge.find({ isDeleted: false }).populate("zone");
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const sortBy = (req.query.sortBy as string) || "createdAt";
+    const sortOrder = (req.query.sortOrder as string) === "asc" ? 1 : -1;
+    const searchData = (req.query.search as string) || "";
+    const zones = (req.query.zones as any) || "";
+    const status = (req.query.status as any) || "";
+
+    const query: any = { isDeleted: false };
+    if (searchData !== "") {
+      query.name = { $regex: new RegExp(`^${searchData}.*`, "i") };
+    }
+    if (zones !== "") {
+      query.zone = { $in: zones };
+    }
+    if (status !== "") {
+      query.isBlocked = status;
+    }
+    const judge = await Judge.find(query)
+      .populate("zone")
+      .sort({ [sortBy]: sortOrder })
+      .skip((page - 1) * limit)
+      .limit(limit);
+    const totalDocuments = await Judge.countDocuments(query);
 
     res.status(200).json({
       success: true,
       judge: judge || [],
+      currentPage: page,
+      totalPages: Math.ceil(totalDocuments / limit),
       msg: "Judge details successfully retrieved",
     });
   }
