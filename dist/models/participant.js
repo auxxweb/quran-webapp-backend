@@ -4,17 +4,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importDefault(require("mongoose"));
-const judgeSchema = new mongoose_1.default.Schema({
+const participantSchema = new mongoose_1.default.Schema({
     name: {
         type: String,
         required: true,
     },
     zone: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "Zone" },
     email: {
-        required: true,
-        type: String,
-    },
-    password: {
         required: true,
         type: String,
     },
@@ -30,18 +26,12 @@ const judgeSchema = new mongoose_1.default.Schema({
         type: String,
         required: true,
     },
+    age: {
+        type: String,
+        required: true,
+    },
     image: {
         type: String,
-    },
-    isBlocked: {
-        type: Boolean,
-        required: true,
-        default: false,
-    },
-    isMain: {
-        type: Boolean,
-        required: true,
-        default: false,
     },
     isDeleted: {
         type: Boolean,
@@ -49,5 +39,5 @@ const judgeSchema = new mongoose_1.default.Schema({
         default: false,
     },
 }, { timestamps: true });
-const Judge = mongoose_1.default.model("Judge", judgeSchema);
-exports.default = Judge;
+const Participant = mongoose_1.default.model("Participant", participantSchema);
+exports.default = Participant;

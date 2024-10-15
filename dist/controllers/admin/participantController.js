@@ -1,0 +1,106 @@
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getParticipantDetails = exports.deleteParticipantDetails = exports.updateParticipantDetails = exports.uploadParticipantDetails = void 0;
+const express_async_handler_1 = __importDefault(require("express-async-handler"));
+const participant_1 = __importDefault(require("../../models/participant"));
+exports.uploadParticipantDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { name, email, phone, address, gender, zone, age } = req.body;
+    if (!name || !email || !phone || !address || !gender || !zone) {
+        res.status(400);
+        throw new Error("Please enter all the fields");
+    }
+    const existParticipant = yield participant_1.default.findOne({
+        email,
+        isDeleted: false,
+    });
+    if (existParticipant) {
+        res.status(400);
+        throw new Error(`${email} Participant already exists`);
+    }
+    const participant = yield participant_1.default.create(Object.assign({}, req.body));
+    if (!participant) {
+        res.status(400);
+        throw new Error("Participant upload failed");
+    }
+    res.status(201).json({
+        success: true,
+        msg: "Participant details successfully uploaded",
+    });
+}));
+// PATCH || update Participant details
+exports.updateParticipantDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { participantId, email } = req.body;
+    if (!participantId) {
+        res.status(400);
+        throw new Error("Participant Id  not found");
+    }
+    if (email) {
+        const participant = yield participant_1.default.findOne({
+            _id: participantId,
+            isDeleted: false,
+        });
+        if (!participant) {
+            res.status(404);
+            throw new Error("Participant not found");
+        }
+        if (participant.email !== email) {
+            const existParticipant = yield participant_1.default.findOne({
+                email,
+                isDeleted: false,
+            });
+            if (existParticipant) {
+                res.status(400);
+                throw new Error("This email already used");
+            }
+        }
+    }
+    const updatedParticipant = yield participant_1.default.findOneAndUpdate({ _id: participantId, isDeleted: false }, req.body, { new: true });
+    if (!updatedParticipant) {
+        res.status(400);
+        throw new Error("Participant not updated");
+    }
+    res.status(200).json({
+        success: true,
+        msg: "Participant details successfully updated",
+    });
+}));
+// DELETE ||  delete Participant details
+exports.deleteParticipantDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { participantId } = req.query;
+    if (!participantId) {
+        res.status(400);
+        throw new Error("participantId not found");
+    }
+    const participant = yield participant_1.default.findByIdAndUpdate({ _id: participantId }, {
+        isDeleted: true,
+    }, { new: true });
+    if (!participant) {
+        res.status(400);
+        throw new Error("Deletion failed");
+    }
+    res.status(200).json({
+        success: true,
+        msg: `${participant === null || participant === void 0 ? void 0 : participant.name} successfully deleted`,
+    });
+}));
+// GET || get Participant details
+exports.getParticipantDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const participant = yield participant_1.default.find({ isDeleted: false }).populate("zone");
+    res.status(200).json({
+        success: true,
+        participant: participant || [],
+        msg: "Participant details successfully retrieved",
+    });
+}));

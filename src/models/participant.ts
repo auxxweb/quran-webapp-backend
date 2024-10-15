@@ -1,20 +1,18 @@
 import mongoose, { Document } from "mongoose";
 
-interface Judge extends Document {
+interface Participant extends Document {
   name: string;
   email: string;
   phone: string;
   address: string;
   gender: string;
-  password: string;
+  age: string;
   image: string;
   zone: any;
-  isBlocked: boolean;
   isDeleted: boolean;
-  isMain: boolean;
 }
 
-const judgeSchema = new mongoose.Schema<Judge>(
+const participantSchema = new mongoose.Schema<Participant>(
   {
     name: {
       type: String,
@@ -22,10 +20,6 @@ const judgeSchema = new mongoose.Schema<Judge>(
     },
     zone: { type: mongoose.Schema.Types.ObjectId, ref: "Zone" },
     email: {
-      required: true,
-      type: String,
-    },
-    password: {
       required: true,
       type: String,
     },
@@ -41,18 +35,12 @@ const judgeSchema = new mongoose.Schema<Judge>(
       type: String,
       required: true,
     },
+    age: {
+      type: String,
+      required: true,
+    },
     image: {
       type: String,
-    },
-    isBlocked: {
-      type: Boolean,
-      required: true,
-      default: false,
-    },
-    isMain: {
-      type: Boolean,
-      required: true,
-      default: false,
     },
     isDeleted: {
       type: Boolean,
@@ -63,5 +51,5 @@ const judgeSchema = new mongoose.Schema<Judge>(
   { timestamps: true }
 );
 
-const Judge = mongoose.model<Judge>("Judge", judgeSchema);
-export default Judge;
+const Participant = mongoose.model<Participant>("Participant", participantSchema);
+export default Participant;

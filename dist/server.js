@@ -22,6 +22,7 @@ require("./config/connectDB");
 const authRoutes_1 = __importDefault(require("./routes/admin/authRoutes"));
 const zoneRoutes_1 = __importDefault(require("./routes/admin/zoneRoutes"));
 const judgeRoutes_1 = __importDefault(require("./routes/admin/judgeRoutes"));
+const participantRoutes_1 = __importDefault(require("./routes/admin/participantRoutes"));
 const errorMiddlewares_1 = require("./middlewares/errorMiddlewares");
 const admin_1 = __importDefault(require("./models/admin"));
 const app = (0, express_1.default)();
@@ -34,6 +35,7 @@ app.get("/", (req, res) => res.json({ success: true, msg: "Quran_Quiz app server
 app.use('/api/admin/auth', authRoutes_1.default);
 app.use('/api/admin/zone', zoneRoutes_1.default);
 app.use('/api/admin/judge', judgeRoutes_1.default);
+app.use('/api/admin/participant', participantRoutes_1.default);
 const addAdmin = () => __awaiter(void 0, void 0, void 0, function* () {
     const email = "admin@quranapp.com";
     const password = "admin@123";

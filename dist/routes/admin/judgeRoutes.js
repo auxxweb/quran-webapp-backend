@@ -14,7 +14,6 @@ router
     .patch(authMiddlewares_1.adminProtect, judgeController_1.updateJudgeDetails)
     .get(authMiddlewares_1.adminProtect, judgeController_1.getJudgeDetails)
     .delete(authMiddlewares_1.adminProtect, judgeController_1.deletejudgeDetails);
-router
-    .route("/blockOrUnblock")
-    .patch(authMiddlewares_1.adminProtect, judgeController_1.blockOrUnblock);
+router.route("/blockOrUnblock").patch(authMiddlewares_1.adminProtect, judgeController_1.blockOrUnblock);
+router.route("/updatePassword").patch(authMiddlewares_1.adminProtect, judgeController_1.updatePassword);
 exports.default = router;

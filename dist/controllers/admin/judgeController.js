@@ -12,23 +12,23 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.blockOrUnblock = exports.getJudgeDetails = exports.deletejudgeDetails = exports.updateJudgeDetails = exports.uploadJudgeDetails = void 0;
+exports.updatePassword = exports.blockOrUnblock = exports.getJudgeDetails = exports.deletejudgeDetails = exports.updateJudgeDetails = exports.uploadJudgeDetails = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const judge_1 = __importDefault(require("../../models/judge"));
+const crypto_1 = __importDefault(require("crypto"));
 exports.uploadJudgeDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { name, email, phone, address, gender, zone, isMain } = req.body;
     if (!name || !email || !phone || !address || !gender || !zone) {
         res.status(400);
         throw new Error("Please enter all the fields");
     }
-    const regExp = new RegExp(`^${name}$`);
     const existJudge = yield judge_1.default.findOne({
-        name: { $regex: regExp, $options: "" },
+        email,
         isDeleted: false,
     });
     if (existJudge) {
         res.status(400);
-        throw new Error(`${name} judge already exists`);
+        throw new Error(`${email}  already exists`);
     }
     if (isMain === true) {
         const mainJudge = yield judge_1.default.findOne({
@@ -38,10 +38,11 @@ exports.uploadJudgeDetails = (0, express_async_handler_1.default)((req, res) => 
         });
         if (mainJudge) {
             res.status(400);
-            throw new Error(`Main judge already exists`);
+            throw new Error(`A main judge already exists in this zone`);
         }
     }
-    const judge = yield judge_1.default.create(Object.assign({}, req.body));
+    const plainPassword = crypto_1.default.randomBytes(8).toString("hex");
+    const judge = yield judge_1.default.create(Object.assign(Object.assign({}, req.body), { password: plainPassword }));
     if (!judge) {
         res.status(400);
         throw new Error("Judge upload failed");
@@ -53,12 +54,13 @@ exports.uploadJudgeDetails = (0, express_async_handler_1.default)((req, res) => 
 }));
 // PATCH || update Judge details
 exports.updateJudgeDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { judgeId, name } = req.body;
+    var _a;
+    const { judgeId, email, isMain, zone } = req.body;
     if (!judgeId) {
         res.status(400);
         throw new Error("Judge Id  not found");
     }
-    if (name) {
+    if (email) {
         const judge = yield judge_1.default.findOne({
             _id: judgeId,
             isDeleted: false,
@@ -67,16 +69,27 @@ exports.updateJudgeDetails = (0, express_async_handler_1.default)((req, res) => 
             res.status(404);
             throw new Error("Judge not found");
         }
-        if (judge.name !== name) {
-            const regExp = new RegExp(`^${name}$`);
+        if (judge.email !== email) {
             const existJudge = yield judge_1.default.findOne({
-                name: { $regex: regExp, $options: "" },
+                email,
                 isDeleted: false,
             });
             if (existJudge) {
                 res.status(400);
-                throw new Error("This judge already exists");
+                throw new Error("This email already used");
             }
+        }
+    }
+    if (isMain === true && zone) {
+        const mainJudge = yield judge_1.default.findOne({
+            zone: zone,
+            isMain: true,
+            isDeleted: false,
+            _id: { $ne: judgeId },
+        }).populate("zone");
+        if (mainJudge) {
+            res.status(400);
+            throw new Error(`A main judge already exists in zone ${(_a = mainJudge === null || mainJudge === void 0 ? void 0 : mainJudge.zone) === null || _a === void 0 ? void 0 : _a.name}`);
         }
     }
     const updatedJudge = yield judge_1.default.findOneAndUpdate({ _id: judgeId, isDeleted: false }, req.body, { new: true });
@@ -110,29 +123,58 @@ exports.deletejudgeDetails = (0, express_async_handler_1.default)((req, res) => 
 }));
 // GET || get judge details
 exports.getJudgeDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const judge = yield judge_1.default.find({ isDeleted: false });
+    const judge = yield judge_1.default.find({ isDeleted: false }).populate("zone");
     res.status(200).json({
         success: true,
         judge: judge || [],
-        msg: "Zone details successfully retrieved",
+        msg: "Judge details successfully retrieved",
     });
 }));
-// PATCHTE ||  block or unblock judge details
+// PATCH ||  block or unblock judge details
 exports.blockOrUnblock = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { judgeId } = req.query;
     if (!judgeId) {
         res.status(400);
         throw new Error("judgeId not found");
     }
-    const judge = yield judge_1.default.findByIdAndUpdate({ _id: judgeId }, {
-        isBlocked: true,
-    }, { new: true });
+    const judge = yield judge_1.default.findOne({ _id: judgeId }, {
+        isBlocked: 1,
+    });
     if (!judge) {
         res.status(400);
         throw new Error("Updation failed");
     }
+    let msg = "";
+    if ((judge === null || judge === void 0 ? void 0 : judge.isBlocked) === true) {
+        msg = `${judge === null || judge === void 0 ? void 0 : judge.name} successfully un blocked`;
+        judge.isBlocked = false;
+    }
+    else {
+        msg = `${judge === null || judge === void 0 ? void 0 : judge.name} successfully blocked`;
+        judge.isBlocked = true;
+    }
+    yield judge.save();
     res.status(200).json({
         success: true,
-        msg: `${judge === null || judge === void 0 ? void 0 : judge.name} successfully deleted`,
+        msg,
+    });
+}));
+// PATCH ||  update judge password details
+exports.updatePassword = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { judgeId, password } = req.query;
+    if (!judgeId) {
+        res.status(400);
+        throw new Error("judgeId not found");
+    }
+    const judge = yield judge_1.default.findByIdAndUpdate({ _id: judgeId }, {
+        password: password,
+    }, { new: true });
+    if (!judge) {
+        res.status(400);
+        throw new Error("Password updation failed");
+    }
+    res.status(200).json({
+        success: true,
+        msg: `${judge === null || judge === void 0 ? void 0 : judge.name}'s password successfully updated`,
     });
 }));

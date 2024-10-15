@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import asyncHandler from "express-async-handler";
 import Judge from "../../models/judge";
+import crypto from "crypto";
 
 export const uploadJudgeDetails = asyncHandler(
   async (req: Request, res: Response) => {
@@ -10,15 +11,14 @@ export const uploadJudgeDetails = asyncHandler(
       res.status(400);
       throw new Error("Please enter all the fields");
     }
-    const regExp = new RegExp(`^${name}$`);
 
     const existJudge = await Judge.findOne({
-      name: { $regex: regExp, $options: "" },
+      email,
       isDeleted: false,
     });
     if (existJudge) {
       res.status(400);
-      throw new Error(`${name} judge already exists`);
+      throw new Error(`${email}  already exists`);
     }
     if (isMain === true) {
       const mainJudge = await Judge.findOne({
@@ -28,11 +28,11 @@ export const uploadJudgeDetails = asyncHandler(
       });
       if (mainJudge) {
         res.status(400);
-        throw new Error(`Main judge already exists`);
+        throw new Error(`A main judge already exists in this zone`);
       }
     }
-
-    const judge = await Judge.create({ ...req.body });
+    const plainPassword = crypto.randomBytes(8).toString("hex");
+    const judge = await Judge.create({ ...req.body, password: plainPassword });
     if (!judge) {
       res.status(400);
       throw new Error("Judge upload failed");
@@ -48,13 +48,13 @@ export const uploadJudgeDetails = asyncHandler(
 // PATCH || update Judge details
 export const updateJudgeDetails = asyncHandler(
   async (req: Request, res: Response) => {
-    const { judgeId, name } = req.body;
+    const { judgeId, email, isMain, zone } = req.body;
 
     if (!judgeId) {
       res.status(400);
       throw new Error("Judge Id  not found");
     }
-    if (name) {
+    if (email) {
       const judge = await Judge.findOne({
         _id: judgeId,
         isDeleted: false,
@@ -64,18 +64,30 @@ export const updateJudgeDetails = asyncHandler(
         throw new Error("Judge not found");
       }
 
-      if (judge.name !== name) {
-        const regExp = new RegExp(`^${name}$`);
-
+      if (judge.email !== email) {
         const existJudge = await Judge.findOne({
-          name: { $regex: regExp, $options: "" },
+          email,
           isDeleted: false,
         });
 
         if (existJudge) {
           res.status(400);
-          throw new Error("This judge already exists");
+          throw new Error("This email already used");
         }
+      }
+    }
+    if (isMain === true && zone) {
+      const mainJudge = await Judge.findOne({
+        zone: zone,
+        isMain: true,
+        isDeleted: false,
+        _id: { $ne: judgeId },
+      }).populate("zone");
+      if (mainJudge) {
+        res.status(400);
+        throw new Error(
+          `A main judge already exists in zone ${mainJudge?.zone?.name}`
+        );
       }
     }
 
@@ -129,42 +141,79 @@ export const deletejudgeDetails = asyncHandler(
 // GET || get judge details
 export const getJudgeDetails = asyncHandler(
   async (req: Request, res: Response) => {
-    const judge = await Judge.find({ isDeleted: false });
+    const judge = await Judge.find({ isDeleted: false }).populate("zone");
 
     res.status(200).json({
       success: true,
       judge: judge || [],
-      msg: "Zone details successfully retrieved",
+      msg: "Judge details successfully retrieved",
     });
   }
 );
 
-// PATCHTE ||  block or unblock judge details
+// PATCH ||  block or unblock judge details
 
 export const blockOrUnblock = asyncHandler(
-    async (req: Request, res: Response) => {
-      const { judgeId } = req.query;
-  
-      if (!judgeId) {
-        res.status(400);
-        throw new Error("judgeId not found");
-      }
-  
-      const judge = await Judge.findByIdAndUpdate(
-        { _id: judgeId },
-        {
-          isBlocked: true,
-        },
-        { new: true }
-      );
-      if (!judge) {
-        res.status(400);
-        throw new Error("Updation failed");
-      }
-  
-      res.status(200).json({
-        success: true,
-        msg: `${judge?.name} successfully deleted`,
-      });
+  async (req: Request, res: Response) => {
+    const { judgeId } = req.query;
+
+    if (!judgeId) {
+      res.status(400);
+      throw new Error("judgeId not found");
     }
-  );
+
+    const judge = await Judge.findOne(
+      { _id: judgeId },
+      {
+        isBlocked: 1,
+      }
+    );
+    if (!judge) {
+      res.status(400);
+      throw new Error("Updation failed");
+    }
+    let msg = "";
+    if (judge?.isBlocked === true) {
+      msg = `${judge?.name} successfully un blocked`;
+      judge.isBlocked = false;
+    } else {
+      msg = `${judge?.name} successfully blocked`;
+      judge.isBlocked = true;
+    }
+    await judge.save();
+    res.status(200).json({
+      success: true,
+      msg,
+    });
+  }
+);
+
+// PATCH ||  update judge password details
+
+export const updatePassword = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { judgeId, password } = req.query;
+
+    if (!judgeId) {
+      res.status(400);
+      throw new Error("judgeId not found");
+    }
+
+    const judge = await Judge.findByIdAndUpdate(
+      { _id: judgeId },
+      {
+        password: password,
+      },
+      { new: true }
+    );
+    if (!judge) {
+      res.status(400);
+      throw new Error("Password updation failed");
+    }
+
+    res.status(200).json({
+      success: true,
+      msg: `${judge?.name}'s password successfully updated`,
+    });
+  }
+);

@@ -2,7 +2,14 @@ import express from "express";
 const router = express.Router();
 import { adminProtect } from "../../middlewares/authMiddlewares";
 
-import { deletejudgeDetails, getJudgeDetails, updateJudgeDetails, uploadJudgeDetails ,blockOrUnblock} from "../../controllers/admin/judgeController";
+import {
+  deletejudgeDetails,
+  getJudgeDetails,
+  updateJudgeDetails,
+  uploadJudgeDetails,
+  blockOrUnblock,
+  updatePassword,
+} from "../../controllers/admin/judgeController";
 
 // Zone routes
 router
@@ -12,7 +19,8 @@ router
   .get(adminProtect, getJudgeDetails)
   .delete(adminProtect, deletejudgeDetails);
 
-  router
-  .route("/blockOrUnblock")
-  .patch(adminProtect, blockOrUnblock)
+router.route("/blockOrUnblock").patch(adminProtect, blockOrUnblock);
+
+router.route("/updatePassword").patch(adminProtect, updatePassword);
+
 export default router;
