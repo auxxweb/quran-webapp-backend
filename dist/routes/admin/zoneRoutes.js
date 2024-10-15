@@ -14,4 +14,5 @@ router
     .patch(authMiddlewares_1.adminProtect, zoneController_1.updateZoneDetails)
     .get(authMiddlewares_1.adminProtect, zoneController_1.getZoneDetails)
     .delete(authMiddlewares_1.adminProtect, zoneController_1.deleteZoneDetails);
+router.get("/all", authMiddlewares_1.adminProtect, zoneController_1.getAllZonesNames);
 exports.default = router;

@@ -6,6 +6,7 @@ import {
   getZoneDetails,
   updateZoneDetails,
   uploadZoneDetails,
+  getAllZonesNames
 } from "../../controllers/admin/zoneController";
 
 // Zone routes
@@ -15,5 +16,7 @@ router
   .patch(adminProtect, updateZoneDetails)
   .get(adminProtect, getZoneDetails)
   .delete(adminProtect, deleteZoneDetails);
+
+  router.get("/all", adminProtect,getAllZonesNames)
 
 export default router;

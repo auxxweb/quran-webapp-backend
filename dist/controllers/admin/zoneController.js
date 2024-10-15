@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getZoneDetails = exports.deleteZoneDetails = exports.updateZoneDetails = exports.uploadZoneDetails = void 0;
+exports.getAllZonesNames = exports.getZoneDetails = exports.deleteZoneDetails = exports.updateZoneDetails = exports.uploadZoneDetails = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const uniqid_1 = __importDefault(require("uniqid"));
 const store_1 = __importDefault(require("store"));
@@ -122,6 +122,15 @@ exports.getZoneDetails = (0, express_async_handler_1.default)((req, res) => __aw
         zones: zones || [],
         currentPage: page,
         totalPages: Math.ceil(totalDocuments / limit),
+        msg: "Zone details successfully retrieved",
+    });
+}));
+// GET || get Zones names and ids
+exports.getAllZonesNames = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const zones = yield zones_1.default.find({ isDeleted: false }, { name: 1 });
+    res.status(200).json({
+        success: true,
+        zones: zones || [],
         msg: "Zone details successfully retrieved",
     });
 }));

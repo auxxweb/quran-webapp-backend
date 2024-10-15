@@ -131,7 +131,7 @@ export const getZoneDetails = asyncHandler(
     if (searchData !== "") {
       query.name = { $regex: new RegExp(`^${searchData}.*`, "i") };
     }
- 
+
     const zones = await Zone.find(query)
       .sort({ [sortBy]: sortOrder })
       .skip((page - 1) * limit)
@@ -143,6 +143,19 @@ export const getZoneDetails = asyncHandler(
       zones: zones || [],
       currentPage: page,
       totalPages: Math.ceil(totalDocuments / limit),
+      msg: "Zone details successfully retrieved",
+    });
+  }
+);
+
+// GET || get Zones names and ids
+export const getAllZonesNames = asyncHandler(
+  async (req: Request, res: Response) => {
+    const zones = await Zone.find({ isDeleted: false }, { name: 1 });
+
+    res.status(200).json({
+      success: true,
+      zones: zones || [],
       msg: "Zone details successfully retrieved",
     });
   }
