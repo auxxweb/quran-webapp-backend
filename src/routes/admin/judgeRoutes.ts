@@ -9,6 +9,7 @@ import {
   uploadJudgeDetails,
   blockOrUnblock,
   updatePassword,
+  getSingleJudgeDetails
 } from "../../controllers/admin/judgeController";
 
 // Zone routes
@@ -22,5 +23,6 @@ router
 router.route("/blockOrUnblock").patch(adminProtect, blockOrUnblock);
 
 router.route("/updatePassword").patch(adminProtect, updatePassword);
+router.get("/:judgeId",adminProtect,getSingleJudgeDetails)
 
 export default router;

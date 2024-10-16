@@ -13,4 +13,5 @@ router
     .patch(authMiddlewares_1.adminProtect, participantController_1.updateParticipantDetails)
     .get(authMiddlewares_1.adminProtect, participantController_1.getParticipantDetails)
     .delete(authMiddlewares_1.adminProtect, participantController_1.deleteParticipantDetails);
+router.get("/:participantId", authMiddlewares_1.adminProtect, participantController_1.getSingleParticipantDetails);
 exports.default = router;

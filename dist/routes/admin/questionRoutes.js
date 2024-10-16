@@ -14,5 +14,6 @@ router
     .patch(authMiddlewares_1.adminProtect, questionController_1.updateQuestionDetails)
     .get(authMiddlewares_1.adminProtect, questionController_1.getQuestionDetails)
     .delete(authMiddlewares_1.adminProtect, questionController_1.deleteQuestionDetails);
+router.get("/:questionId", authMiddlewares_1.adminProtect, questionController_1.getSingleQuestionDetails);
 router.get("/all", authMiddlewares_1.adminProtect, questionController_1.getAllQuestionsNames);
 exports.default = router;

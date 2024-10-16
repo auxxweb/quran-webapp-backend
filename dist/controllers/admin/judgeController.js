@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updatePassword = exports.blockOrUnblock = exports.getJudgeDetails = exports.deletejudgeDetails = exports.updateJudgeDetails = exports.uploadJudgeDetails = void 0;
+exports.getSingleJudgeDetails = exports.updatePassword = exports.blockOrUnblock = exports.getJudgeDetails = exports.deletejudgeDetails = exports.updateJudgeDetails = exports.uploadJudgeDetails = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const judge_1 = __importDefault(require("../../models/judge"));
 const crypto_1 = __importDefault(require("crypto"));
@@ -200,5 +200,26 @@ exports.updatePassword = (0, express_async_handler_1.default)((req, res) => __aw
     res.status(200).json({
         success: true,
         msg: `${judge === null || judge === void 0 ? void 0 : judge.name}'s password successfully updated`,
+    });
+}));
+// GET || get single Judge details
+exports.getSingleJudgeDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { judgeId } = req.params;
+    if (!judgeId) {
+        res.status(400);
+        throw new Error("judgeId is required");
+    }
+    const judge = yield judge_1.default.findOne({
+        _id: judgeId,
+        isDeleted: false,
+    }).populate("zone");
+    if (!judge) {
+        res.status(400);
+        throw new Error("Judge not found");
+    }
+    res.status(200).json({
+        success: true,
+        judge: judge,
+        msg: "Judge details successfully retrieved",
     });
 }));

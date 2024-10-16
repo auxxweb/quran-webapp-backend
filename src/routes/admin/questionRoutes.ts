@@ -5,6 +5,7 @@ import {
   deleteQuestionDetails,
   getAllQuestionsNames,
   getQuestionDetails,
+  getSingleQuestionDetails,
   updateQuestionDetails,
   uploadQuestionDetails,
 } from "../../controllers/admin/questionController";
@@ -18,6 +19,7 @@ router
   .get(adminProtect, getQuestionDetails)
   .delete(adminProtect, deleteQuestionDetails);
 
+  router.get("/:questionId",adminProtect,getSingleQuestionDetails)
   router.get("/all", adminProtect,getAllQuestionsNames)
 
 export default router;

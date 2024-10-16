@@ -180,7 +180,6 @@ export const getJudgeDetails = asyncHandler(
 
 export const blockOrUnblock = asyncHandler(
   async (req: Request, res: Response) => {
-    
     const { judgeId } = req.query;
 
     if (!judgeId) {
@@ -240,6 +239,30 @@ export const updatePassword = asyncHandler(
     res.status(200).json({
       success: true,
       msg: `${judge?.name}'s password successfully updated`,
+    });
+  }
+);
+
+// GET || get single Judge details
+export const getSingleJudgeDetails = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { judgeId } = req.params;
+    if (!judgeId) {
+      res.status(400);
+      throw new Error("judgeId is required");
+    }
+    const judge = await Judge.findOne({
+      _id: judgeId,
+      isDeleted: false,
+    }).populate("zone");
+    if (!judge) {
+      res.status(400);
+      throw new Error("Judge not found");
+    }
+    res.status(200).json({
+      success: true,
+      judge: judge,
+      msg: "Judge details successfully retrieved",
     });
   }
 );

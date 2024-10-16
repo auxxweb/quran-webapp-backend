@@ -153,14 +153,41 @@ export const getQuestionDetails = asyncHandler(
 
 // GET || get question  and ids
 export const getAllQuestionsNames = asyncHandler(
-    async (req: Request, res: Response) => {
-      const questions = await Question.find({ isDeleted: false }, { question: 1 });
-  
-      res.status(200).json({
-        success: true,
-        questions: questions || [],
-        msg: "Question details successfully retrieved",
-      });
+  async (req: Request, res: Response) => {
+    const questions = await Question.find(
+      { isDeleted: false },
+      { question: 1 }
+    );
+
+    res.status(200).json({
+      success: true,
+      questions: questions || [],
+      msg: "Question details successfully retrieved",
+    });
+  }
+);
+
+// GET || get single Question details
+export const getSingleQuestionDetails = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { questionId } = req.params;
+    if (!questionId) {
+      res.status(400);
+      throw new Error("questionId is required");
     }
-  );
-  
+    const question = await Question.findOne({
+      _id: questionId,
+      isDeleted: false,
+    });
+
+    if (!question) {
+      res.status(400);
+      throw new Error("Question not found");
+    }
+    res.status(200).json({
+      success: true,
+      question: question,
+      msg: "Question details successfully retrieved",
+    });
+  }
+);

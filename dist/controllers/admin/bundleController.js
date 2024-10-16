@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getBundleDetails = exports.deleteBundleDetails = exports.updateBundleDetails = exports.uploadBundleDetails = void 0;
+exports.getSingleBundleDetails = exports.getBundleDetails = exports.deleteBundleDetails = exports.updateBundleDetails = exports.uploadBundleDetails = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const uniqid_1 = __importDefault(require("uniqid"));
 const store_1 = __importDefault(require("store"));
@@ -123,5 +123,26 @@ exports.getBundleDetails = (0, express_async_handler_1.default)((req, res) => __
         currentPage: page,
         totalPages: Math.ceil(totalDocuments / limit),
         msg: "Bundles details successfully retrieved",
+    });
+}));
+// GET || get single Bundle details
+exports.getSingleBundleDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { bundleId } = req.params;
+    if (!bundleId) {
+        res.status(400);
+        throw new Error("bundleId is required");
+    }
+    const bundle = yield bundle_1.default.findOne({ _id: bundleId, isDeleted: false })
+        .populate({
+        path: "questions",
+    });
+    if (!bundle) {
+        res.status(400);
+        throw new Error("Bundle not found");
+    }
+    res.status(200).json({
+        success: true,
+        bundle: bundle,
+        msg: "Bundle details successfully retrieved",
     });
 }));

@@ -151,3 +151,28 @@ export const getBundleDetails = asyncHandler(
   }
 );
 
+
+// GET || get single Bundle details
+export const getSingleBundleDetails = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { bundleId } = req.params;
+    if (!bundleId) {
+      res.status(400);
+      throw new Error("bundleId is required");
+    }
+    const bundle = await Bundle.findOne({ _id: bundleId, isDeleted: false })
+      .populate({
+        path: "questions",
+      });
+    if (!bundle) {
+      res.status(400);
+      throw new Error("Bundle not found");
+    }
+    res.status(200).json({
+      success: true,
+      bundle: bundle,
+      msg: "Bundle details successfully retrieved",
+    });
+  }
+);
+

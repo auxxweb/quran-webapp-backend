@@ -14,4 +14,5 @@ router
     .patch(authMiddlewares_1.adminProtect, bundleController_1.updateBundleDetails)
     .get(authMiddlewares_1.adminProtect, bundleController_1.getBundleDetails)
     .delete(authMiddlewares_1.adminProtect, bundleController_1.deleteBundleDetails);
+router.get("/:bundleId", authMiddlewares_1.adminProtect, bundleController_1.getSingleBundleDetails);
 exports.default = router;
