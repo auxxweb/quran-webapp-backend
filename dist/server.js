@@ -23,6 +23,8 @@ const authRoutes_1 = __importDefault(require("./routes/admin/authRoutes"));
 const zoneRoutes_1 = __importDefault(require("./routes/admin/zoneRoutes"));
 const judgeRoutes_1 = __importDefault(require("./routes/admin/judgeRoutes"));
 const participantRoutes_1 = __importDefault(require("./routes/admin/participantRoutes"));
+const questionRoutes_1 = __importDefault(require("./routes/admin/questionRoutes"));
+const bundleRoutes_1 = __importDefault(require("./routes/admin/bundleRoutes"));
 const errorMiddlewares_1 = require("./middlewares/errorMiddlewares");
 const admin_1 = __importDefault(require("./models/admin"));
 const app = (0, express_1.default)();
@@ -36,6 +38,8 @@ app.use('/api/admin/auth', authRoutes_1.default);
 app.use('/api/admin/zone', zoneRoutes_1.default);
 app.use('/api/admin/judge', judgeRoutes_1.default);
 app.use('/api/admin/participant', participantRoutes_1.default);
+app.use('/api/admin/question', questionRoutes_1.default);
+app.use('/api/admin/bundle', bundleRoutes_1.default);
 const addAdmin = () => __awaiter(void 0, void 0, void 0, function* () {
     const email = "admin@quranapp.com";
     const password = "admin@123";

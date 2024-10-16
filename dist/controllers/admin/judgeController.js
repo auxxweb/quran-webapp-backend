@@ -170,7 +170,7 @@ exports.blockOrUnblock = (0, express_async_handler_1.default)((req, res) => __aw
     }
     let msg = "";
     if ((judge === null || judge === void 0 ? void 0 : judge.isBlocked) === true) {
-        msg = `${judge === null || judge === void 0 ? void 0 : judge.name} successfully un blocked`;
+        msg = `${judge === null || judge === void 0 ? void 0 : judge.name} successfully unblocked`;
         judge.isBlocked = false;
     }
     else {

@@ -180,6 +180,7 @@ export const getJudgeDetails = asyncHandler(
 
 export const blockOrUnblock = asyncHandler(
   async (req: Request, res: Response) => {
+    
     const { judgeId } = req.query;
 
     if (!judgeId) {
@@ -199,7 +200,7 @@ export const blockOrUnblock = asyncHandler(
     }
     let msg = "";
     if (judge?.isBlocked === true) {
-      msg = `${judge?.name} successfully un blocked`;
+      msg = `${judge?.name} successfully unblocked`;
       judge.isBlocked = false;
     } else {
       msg = `${judge?.name} successfully blocked`;

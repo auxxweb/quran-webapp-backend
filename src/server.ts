@@ -13,6 +13,8 @@ import adminAuthRoute from './routes/admin/authRoutes'
 import adminZoneRoute from './routes/admin/zoneRoutes'
 import adminJudgeRoute from './routes/admin/judgeRoutes'
 import adminParticipantRoute from './routes/admin/participantRoutes'
+import adminQuestionRoute from './routes/admin/questionRoutes'
+import adminBundleRoute from './routes/admin/bundleRoutes'
 
 import { errorHandler, notFound } from "./middlewares/errorMiddlewares";
 import Admin from "./models/admin";
@@ -32,6 +34,8 @@ app.get("/", (req: Request, res: Response) =>
  app.use('/api/admin/zone',adminZoneRoute)
  app.use('/api/admin/judge',adminJudgeRoute)
  app.use('/api/admin/participant',adminParticipantRoute)
+ app.use('/api/admin/question',adminQuestionRoute)
+ app.use('/api/admin/bundle',adminBundleRoute)
 
  const addAdmin = async () => {
   const email = "admin@quranapp.com";
