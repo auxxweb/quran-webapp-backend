@@ -6,8 +6,17 @@ import crypto from "crypto";
 export const uploadJudgeDetails = asyncHandler(
   async (req: Request, res: Response) => {
     const { name, email, phone, address, gender, zone, isMain } = req.body;
-
-    if (!name || !email || !phone || !address || !gender || !zone) {
+    const { image }: any = req.files || {};
+    const imageUrl = image && image[0]?.location;
+    if (
+      !name ||
+      !email ||
+      !phone ||
+      !address ||
+      !gender ||
+      !zone ||
+      !imageUrl
+    ) {
       res.status(400);
       throw new Error("Please enter all the fields");
     }
@@ -31,8 +40,12 @@ export const uploadJudgeDetails = asyncHandler(
         throw new Error(`A main judge already exists in this zone`);
       }
     }
-    const plainPassword = crypto.randomBytes(8).toString("hex");
-    const judge = await Judge.create({ ...req.body, password: plainPassword });
+    const plainPassword = crypto.randomBytes(4).toString("hex").slice(0, 8);
+    const judge = await Judge.create({
+      ...req.body,
+      password: plainPassword,
+      image: imageUrl,
+    });
     if (!judge) {
       res.status(400);
       throw new Error("Judge upload failed");
@@ -49,7 +62,8 @@ export const uploadJudgeDetails = asyncHandler(
 export const updateJudgeDetails = asyncHandler(
   async (req: Request, res: Response) => {
     const { judgeId, email, isMain, zone } = req.body;
-
+    const { image }: any = req.files || {};
+    const imageUrl = image && image[0]?.location;
     if (!judgeId) {
       res.status(400);
       throw new Error("Judge Id  not found");
@@ -93,7 +107,7 @@ export const updateJudgeDetails = asyncHandler(
 
     const updatedJudge = await Judge.findOneAndUpdate(
       { _id: judgeId, isDeleted: false },
-      req.body,
+      { ...req.body, image: imageUrl && imageUrl },
       { new: true }
     );
     if (!updatedJudge) {

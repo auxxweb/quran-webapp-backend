@@ -22,7 +22,7 @@ export const uploadQuestionDetails = asyncHandler(
       res.status(400);
       throw new Error(`This question already exists`);
     }
-    let tx_uuid = uniqid();
+    let tx_uuid = uniqid().slice(0, 6); 
     store.set("uuid", { tx: tx_uuid });
     const newQuestion = await Question.create({
       ...req.body,

@@ -32,7 +32,7 @@ exports.uploadQuestionDetails = (0, express_async_handler_1.default)((req, res) 
         res.status(400);
         throw new Error(`This question already exists`);
     }
-    let tx_uuid = (0, uniqid_1.default)();
+    let tx_uuid = (0, uniqid_1.default)().slice(0, 6);
     store_1.default.set("uuid", { tx: tx_uuid });
     const newQuestion = yield question_1.default.create(Object.assign(Object.assign({}, req.body), { questionId: tx_uuid }));
     if (!newQuestion) {

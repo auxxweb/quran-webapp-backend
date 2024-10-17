@@ -17,8 +17,18 @@ const express_async_handler_1 = __importDefault(require("express-async-handler")
 const participant_1 = __importDefault(require("../../models/participant"));
 const result_1 = __importDefault(require("../../models/result"));
 exports.uploadParticipantDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     const { name, email, phone, address, gender, zone, age } = req.body;
-    if (!name || !email || !phone || !address || !gender || !zone) {
+    const { image } = req.files || {};
+    const imageUrl = image && ((_a = image[0]) === null || _a === void 0 ? void 0 : _a.location);
+    if (!name ||
+        !email ||
+        !phone ||
+        !address ||
+        !gender ||
+        !zone ||
+        !age ||
+        !imageUrl) {
         res.status(400);
         throw new Error("Please enter all the fields");
     }
@@ -30,7 +40,7 @@ exports.uploadParticipantDetails = (0, express_async_handler_1.default)((req, re
         res.status(400);
         throw new Error(`${email} Participant already exists`);
     }
-    const participant = yield participant_1.default.create(Object.assign({}, req.body));
+    const participant = yield participant_1.default.create(Object.assign(Object.assign({}, req.body), { image: imageUrl }));
     if (!participant) {
         res.status(400);
         throw new Error("Participant upload failed");
@@ -42,7 +52,10 @@ exports.uploadParticipantDetails = (0, express_async_handler_1.default)((req, re
 }));
 // PATCH || update Participant details
 exports.updateParticipantDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _b;
     const { participantId, email } = req.body;
+    const { image } = req.files || {};
+    const imageUrl = image && ((_b = image[0]) === null || _b === void 0 ? void 0 : _b.location);
     if (!participantId) {
         res.status(400);
         throw new Error("Participant Id  not found");
@@ -67,7 +80,7 @@ exports.updateParticipantDetails = (0, express_async_handler_1.default)((req, re
             }
         }
     }
-    const updatedParticipant = yield participant_1.default.findOneAndUpdate({ _id: participantId, isDeleted: false }, req.body, { new: true });
+    const updatedParticipant = yield participant_1.default.findOneAndUpdate({ _id: participantId, isDeleted: false }, Object.assign(Object.assign({}, req.body), { image: imageUrl && imageUrl }), { new: true });
     if (!updatedParticipant) {
         res.status(400);
         throw new Error("Participant not updated");

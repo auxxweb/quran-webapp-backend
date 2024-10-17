@@ -22,7 +22,7 @@ export const uploadBundleDetails = asyncHandler(
       res.status(400);
       throw new Error(`This bundle title already exists`);
     }
-    let tx_uuid = uniqid();
+    let tx_uuid = uniqid().slice(0, 6); 
     store.set("uuid", { tx: tx_uuid });
     const bundle = await Bundle.create({
       ...req.body,

@@ -11,12 +11,13 @@ import {
   updatePassword,
   getSingleJudgeDetails
 } from "../../controllers/admin/judgeController";
+import upload from "../../middlewares/multer";
 
 // Zone routes
 router
   .route("/")
-  .post(adminProtect, uploadJudgeDetails)
-  .patch(adminProtect, updateJudgeDetails)
+  .post(adminProtect,upload.fields([{ name: "image", maxCount: 1 }]), uploadJudgeDetails)
+  .patch(adminProtect,upload.fields([{ name: "image", maxCount: 1 }]), updateJudgeDetails)
   .get(adminProtect, getJudgeDetails)
   .delete(adminProtect, deletejudgeDetails);
 

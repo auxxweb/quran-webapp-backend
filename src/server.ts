@@ -9,12 +9,14 @@ import './config/connectDB'
 
 
 
+import adminRoute from './routes/admin/adminRoutes'
 import adminAuthRoute from './routes/admin/authRoutes'
 import adminZoneRoute from './routes/admin/zoneRoutes'
 import adminJudgeRoute from './routes/admin/judgeRoutes'
 import adminParticipantRoute from './routes/admin/participantRoutes'
 import adminQuestionRoute from './routes/admin/questionRoutes'
 import adminBundleRoute from './routes/admin/bundleRoutes'
+import adminResultRoute from './routes/admin/resultRoutes'
 
 import { errorHandler, notFound } from "./middlewares/errorMiddlewares";
 import Admin from "./models/admin";
@@ -30,12 +32,14 @@ app.get("/", (req: Request, res: Response) =>
   res.json({ success: true, msg: "Quran_Quiz app server working successfully!" })
 );
 // Admin Routes
+ app.use('/api/admin',adminRoute)
  app.use('/api/admin/auth',adminAuthRoute)
  app.use('/api/admin/zone',adminZoneRoute)
  app.use('/api/admin/judge',adminJudgeRoute)
  app.use('/api/admin/participant',adminParticipantRoute)
  app.use('/api/admin/question',adminQuestionRoute)
  app.use('/api/admin/bundle',adminBundleRoute)
+ app.use('/api/admin/result',adminResultRoute)
 
  const addAdmin = async () => {
   const email = "admin@quranapp.com";

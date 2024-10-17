@@ -18,8 +18,11 @@ const uniqid_1 = __importDefault(require("uniqid"));
 const store_1 = __importDefault(require("store"));
 const zones_1 = __importDefault(require("../../models/zones"));
 exports.uploadZoneDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { name, description, image } = req.body;
-    if (!name || !description || !image) {
+    var _a;
+    const { name, description } = req.body;
+    const { image } = req.files || {};
+    const imageUrl = image && ((_a = image[0]) === null || _a === void 0 ? void 0 : _a.location);
+    if (!name || !description || !imageUrl) {
         res.status(400);
         throw new Error("Please enter all the fields");
     }
@@ -34,7 +37,7 @@ exports.uploadZoneDetails = (0, express_async_handler_1.default)((req, res) => _
     }
     let tx_uuid = (0, uniqid_1.default)();
     store_1.default.set("uuid", { tx: tx_uuid });
-    const zone = yield zones_1.default.create(Object.assign(Object.assign({}, req.body), { url: `/${name}/${tx_uuid}` }));
+    const zone = yield zones_1.default.create(Object.assign(Object.assign({}, req.body), { image: imageUrl, url: `/${tx_uuid}` }));
     if (!zone) {
         res.status(400);
         throw new Error("Zone upload failed");
@@ -46,7 +49,10 @@ exports.uploadZoneDetails = (0, express_async_handler_1.default)((req, res) => _
 }));
 // PATCH || update Zone details
 exports.updateZoneDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _b;
     const { zoneId, name } = req.body;
+    const { image } = req.files || {};
+    const imageUrl = image && ((_b = image[0]) === null || _b === void 0 ? void 0 : _b.location);
     if (!zoneId) {
         res.status(400);
         throw new Error("Zone Id  not found");
@@ -72,7 +78,7 @@ exports.updateZoneDetails = (0, express_async_handler_1.default)((req, res) => _
             }
         }
     }
-    const updatedZone = yield zones_1.default.findOneAndUpdate({ _id: zoneId, isDeleted: false }, req.body, { new: true });
+    const updatedZone = yield zones_1.default.findOneAndUpdate({ _id: zoneId, isDeleted: false }, Object.assign(Object.assign({}, req.body), { image: imageUrl && imageUrl }), { new: true });
     if (!updatedZone) {
         res.status(400);
         throw new Error("Zone not updated");

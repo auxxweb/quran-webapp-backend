@@ -6,8 +6,18 @@ import Result from "../../models/result";
 export const uploadParticipantDetails = asyncHandler(
   async (req: Request, res: Response) => {
     const { name, email, phone, address, gender, zone, age } = req.body;
-
-    if (!name || !email || !phone || !address || !gender || !zone) {
+    const { image }: any = req.files || {};
+    const imageUrl = image && image[0]?.location;
+    if (
+      !name ||
+      !email ||
+      !phone ||
+      !address ||
+      !gender ||
+      !zone ||
+      !age ||
+      !imageUrl
+    ) {
       res.status(400);
       throw new Error("Please enter all the fields");
     }
@@ -21,7 +31,10 @@ export const uploadParticipantDetails = asyncHandler(
       throw new Error(`${email} Participant already exists`);
     }
 
-    const participant = await Participant.create({ ...req.body });
+    const participant = await Participant.create({
+      ...req.body,
+      image: imageUrl,
+    });
     if (!participant) {
       res.status(400);
       throw new Error("Participant upload failed");
@@ -38,7 +51,8 @@ export const uploadParticipantDetails = asyncHandler(
 export const updateParticipantDetails = asyncHandler(
   async (req: Request, res: Response) => {
     const { participantId, email } = req.body;
-
+    const { image }: any = req.files || {};
+    const imageUrl = image && image[0]?.location;
     if (!participantId) {
       res.status(400);
       throw new Error("Participant Id  not found");
@@ -68,7 +82,7 @@ export const updateParticipantDetails = asyncHandler(
 
     const updatedParticipant = await Participant.findOneAndUpdate(
       { _id: participantId, isDeleted: false },
-      req.body,
+      { ...req.body, image: imageUrl && imageUrl },
       { new: true }
     );
     if (!updatedParticipant) {
