@@ -4,9 +4,9 @@ import Judge from "../../models/judge";
 import crypto from "crypto";
 
 export const uploadJudgeDetails = asyncHandler(
-  async (req: Request, res: Response) => {
+  async (req: any, res: Response) => {
     const { name, email, phone, address, gender, zone, isMain } = req.body;
-    const { image }: any = req.files || {};
+    const { image }: any = req?.files || {};
     const imageUrl = image && image[0]?.location;
     if (
       !name ||
@@ -60,7 +60,7 @@ export const uploadJudgeDetails = asyncHandler(
 
 // PATCH || update Judge details
 export const updateJudgeDetails = asyncHandler(
-  async (req: Request, res: Response) => {
+  async (req: any, res: Response) => {
     const { judgeId, email, isMain, zone } = req.body;
     const { image }: any = req.files || {};
     const imageUrl = image && image[0]?.location;
