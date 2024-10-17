@@ -12,12 +12,23 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getParticipantDetails = exports.deleteParticipantDetails = exports.updateParticipantDetails = exports.uploadParticipantDetails = void 0;
+exports.getSingleParticipantDetails = exports.getParticipantDetails = exports.deleteParticipantDetails = exports.updateParticipantDetails = exports.uploadParticipantDetails = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const participant_1 = __importDefault(require("../../models/participant"));
+const result_1 = __importDefault(require("../../models/result"));
 exports.uploadParticipantDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     const { name, email, phone, address, gender, zone, age } = req.body;
-    if (!name || !email || !phone || !address || !gender || !zone) {
+    const { image } = req.files || {};
+    const imageUrl = image && ((_a = image[0]) === null || _a === void 0 ? void 0 : _a.location);
+    if (!name ||
+        !email ||
+        !phone ||
+        !address ||
+        !gender ||
+        !zone ||
+        !age ||
+        !imageUrl) {
         res.status(400);
         throw new Error("Please enter all the fields");
     }
@@ -29,7 +40,7 @@ exports.uploadParticipantDetails = (0, express_async_handler_1.default)((req, re
         res.status(400);
         throw new Error(`${email} Participant already exists`);
     }
-    const participant = yield participant_1.default.create(Object.assign({}, req.body));
+    const participant = yield participant_1.default.create(Object.assign(Object.assign({}, req.body), { image: imageUrl }));
     if (!participant) {
         res.status(400);
         throw new Error("Participant upload failed");
@@ -41,7 +52,10 @@ exports.uploadParticipantDetails = (0, express_async_handler_1.default)((req, re
 }));
 // PATCH || update Participant details
 exports.updateParticipantDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _b;
     const { participantId, email } = req.body;
+    const { image } = req.files || {};
+    const imageUrl = image && ((_b = image[0]) === null || _b === void 0 ? void 0 : _b.location);
     if (!participantId) {
         res.status(400);
         throw new Error("Participant Id  not found");
@@ -66,7 +80,7 @@ exports.updateParticipantDetails = (0, express_async_handler_1.default)((req, re
             }
         }
     }
-    const updatedParticipant = yield participant_1.default.findOneAndUpdate({ _id: participantId, isDeleted: false }, req.body, { new: true });
+    const updatedParticipant = yield participant_1.default.findOneAndUpdate({ _id: participantId, isDeleted: false }, Object.assign(Object.assign({}, req.body), { image: imageUrl && imageUrl }), { new: true });
     if (!updatedParticipant) {
         res.status(400);
         throw new Error("Participant not updated");
@@ -121,6 +135,47 @@ exports.getParticipantDetails = (0, express_async_handler_1.default)((req, res) 
         participant: participant || [],
         currentPage: page,
         totalPages: Math.ceil(totalDocuments / limit),
+        msg: "Participant details successfully retrieved",
+    });
+}));
+// GET || get single Participant details
+exports.getSingleParticipantDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { participantId } = req.params;
+    if (!participantId) {
+        res.status(400);
+        throw new Error("participantId is required");
+    }
+    const participant = yield participant_1.default.findOne({
+        _id: participantId,
+        isDeleted: false,
+    }).populate("zone");
+    if (!participant) {
+        res.status(400);
+        throw new Error("Participant not found");
+    }
+    const competitions = yield result_1.default.find({
+        participant: participantId,
+        isDeleted: false,
+    })
+        .populate("zone")
+        .populate("participant")
+        .populate({
+        path: "results",
+        populate: [
+            {
+                path: "question",
+                model: "Question",
+            },
+            {
+                path: "responses.judge",
+                model: "Judge",
+            },
+        ],
+    });
+    res.status(200).json({
+        success: true,
+        participant: participant,
+        competitions: competitions || [],
         msg: "Participant details successfully retrieved",
     });
 }));

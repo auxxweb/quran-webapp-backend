@@ -12,14 +12,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getZoneDetails = exports.deleteZoneDetails = exports.updateZoneDetails = exports.uploadZoneDetails = void 0;
+exports.getAllZonesNames = exports.getZoneDetails = exports.deleteZoneDetails = exports.updateZoneDetails = exports.uploadZoneDetails = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const uniqid_1 = __importDefault(require("uniqid"));
 const store_1 = __importDefault(require("store"));
 const zones_1 = __importDefault(require("../../models/zones"));
 exports.uploadZoneDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { name, description, image } = req.body;
-    if (!name || !description || !image) {
+    var _a;
+    const { name, description } = req.body;
+    const { image } = req.files || {};
+    const imageUrl = image && ((_a = image[0]) === null || _a === void 0 ? void 0 : _a.location);
+    if (!name || !description || !imageUrl) {
         res.status(400);
         throw new Error("Please enter all the fields");
     }
@@ -34,7 +37,7 @@ exports.uploadZoneDetails = (0, express_async_handler_1.default)((req, res) => _
     }
     let tx_uuid = (0, uniqid_1.default)();
     store_1.default.set("uuid", { tx: tx_uuid });
-    const zone = yield zones_1.default.create(Object.assign(Object.assign({}, req.body), { url: `/${name}/${tx_uuid}` }));
+    const zone = yield zones_1.default.create(Object.assign(Object.assign({}, req.body), { image: imageUrl, url: `/${tx_uuid}` }));
     if (!zone) {
         res.status(400);
         throw new Error("Zone upload failed");
@@ -46,7 +49,10 @@ exports.uploadZoneDetails = (0, express_async_handler_1.default)((req, res) => _
 }));
 // PATCH || update Zone details
 exports.updateZoneDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _b;
     const { zoneId, name } = req.body;
+    const { image } = req.files || {};
+    const imageUrl = image && ((_b = image[0]) === null || _b === void 0 ? void 0 : _b.location);
     if (!zoneId) {
         res.status(400);
         throw new Error("Zone Id  not found");
@@ -72,7 +78,7 @@ exports.updateZoneDetails = (0, express_async_handler_1.default)((req, res) => _
             }
         }
     }
-    const updatedZone = yield zones_1.default.findOneAndUpdate({ _id: zoneId, isDeleted: false }, req.body, { new: true });
+    const updatedZone = yield zones_1.default.findOneAndUpdate({ _id: zoneId, isDeleted: false }, Object.assign(Object.assign({}, req.body), { image: imageUrl && imageUrl }), { new: true });
     if (!updatedZone) {
         res.status(400);
         throw new Error("Zone not updated");
@@ -122,6 +128,15 @@ exports.getZoneDetails = (0, express_async_handler_1.default)((req, res) => __aw
         zones: zones || [],
         currentPage: page,
         totalPages: Math.ceil(totalDocuments / limit),
+        msg: "Zone details successfully retrieved",
+    });
+}));
+// GET || get Zones names and ids
+exports.getAllZonesNames = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const zones = yield zones_1.default.find({ isDeleted: false }, { name: 1 });
+    res.status(200).json({
+        success: true,
+        zones: zones || [],
         msg: "Zone details successfully retrieved",
     });
 }));

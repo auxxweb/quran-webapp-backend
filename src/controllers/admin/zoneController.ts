@@ -7,9 +7,10 @@ import Zone from "../../models/zones";
 
 export const uploadZoneDetails = asyncHandler(
   async (req: Request, res: Response) => {
-    const { name, description, image } = req.body;
-
-    if (!name || !description || !image) {
+    const { name, description } = req.body;
+    const { image }: any = req.files || {};
+    const imageUrl = image && image[0]?.location;
+    if (!name || !description || !imageUrl) {
       res.status(400);
       throw new Error("Please enter all the fields");
     }
@@ -25,7 +26,7 @@ export const uploadZoneDetails = asyncHandler(
     }
     let tx_uuid = uniqid();
     store.set("uuid", { tx: tx_uuid });
-    const zone = await Zone.create({ ...req.body, url: `/${name}/${tx_uuid}` });
+    const zone = await Zone.create({ ...req.body,image:imageUrl, url: `/${tx_uuid}` });
     if (!zone) {
       res.status(400);
       throw new Error("Zone upload failed");
@@ -42,7 +43,8 @@ export const uploadZoneDetails = asyncHandler(
 export const updateZoneDetails = asyncHandler(
   async (req: Request, res: Response) => {
     const { zoneId, name } = req.body;
-
+    const { image }: any = req.files || {};
+    const imageUrl = image && image[0]?.location;
     if (!zoneId) {
       res.status(400);
       throw new Error("Zone Id  not found");
@@ -74,7 +76,7 @@ export const updateZoneDetails = asyncHandler(
 
     const updatedZone = await Zone.findOneAndUpdate(
       { _id: zoneId, isDeleted: false },
-      req.body,
+      {...req.body, image: imageUrl && imageUrl},
       { new: true }
     );
     if (!updatedZone) {
@@ -131,7 +133,7 @@ export const getZoneDetails = asyncHandler(
     if (searchData !== "") {
       query.name = { $regex: new RegExp(`^${searchData}.*`, "i") };
     }
- 
+
     const zones = await Zone.find(query)
       .sort({ [sortBy]: sortOrder })
       .skip((page - 1) * limit)
@@ -147,3 +149,17 @@ export const getZoneDetails = asyncHandler(
     });
   }
 );
+
+// GET || get Zones names and ids
+export const getAllZonesNames = asyncHandler(
+  async (req: Request, res: Response) => {
+    const zones = await Zone.find({ isDeleted: false }, { name: 1 });
+
+    res.status(200).json({
+      success: true,
+      zones: zones || [],
+      msg: "Zone details successfully retrieved",
+    });
+  }
+);
+
