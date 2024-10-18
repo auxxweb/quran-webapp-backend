@@ -35,7 +35,7 @@ export const login = async (
     if (judge.password !== password) {
       return res
         .status(401)
-        .json({ errors: { password: "Password does not match" } });
+        .json({ success: false,errors: { password: "Password does not match" } });
     }
 
     let judgeInfo = {
