@@ -8,4 +8,6 @@ router.get("/", getUser);
 
 router.get("/proceed-to-question", proceedToQuestion);
 
+router.get("/proceed-to-question", proceedToQuestion);
+
 export default router;
