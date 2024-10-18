@@ -62,7 +62,7 @@ export const getUser = async (
   next: NextFunction
 ) => {
   try {
-    const participant = await Participant.find({ _id: req.params.id });
+    const participant = await Participant.findOne({ _id: req.params.id });
     if (!participant) {
       return res.status(404).json({
         message: "participant not found",
