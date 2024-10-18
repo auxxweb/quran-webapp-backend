@@ -21,13 +21,13 @@ export const login = async (
       return res.status(401).json({ error });
     }
 
-    const { name, password } = req.body;
+    const { email, password } = req.body;
 
-    const judge = await Judge.findOne({ name: name }).populate('zone');
+    const judge = await Judge.findOne({ email: email }).populate('zone');
 
     if (!judge) {
       return res.status(401).json({
-        errors: { name: "Account not found, invalid name" },
+        errors: { email: "Account not found, invalid email" },
         success: false,
       });
     }
