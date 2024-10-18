@@ -38,6 +38,12 @@ export const login = async (
         .json({ success: false,errors: { password: "Password does not match" } });
     }
 
+    if (judge.isBlocked) {
+      return res
+        .status(401)
+        .json({ success: false,errors: { common: "Access denied. Please contact the admin." } });
+    }
+    
     let judgeInfo = {
       email: judge?.email,
       name: judge?.name,
