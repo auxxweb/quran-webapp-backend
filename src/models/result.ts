@@ -33,7 +33,6 @@ const resultSchema = new mongoose.Schema<Result>(
     },
     endTime: {
       type: Date,
-      required: true,
     },
     isDeleted: {
       type: Boolean,
