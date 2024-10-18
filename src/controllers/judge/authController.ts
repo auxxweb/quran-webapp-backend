@@ -23,7 +23,7 @@ export const login = async (
 
     const { name, password } = req.body;
 
-    const judge = await Judge.findOne({ name: name });
+    const judge = await Judge.findOne({ name: name }).populate('zone');
 
     if (!judge) {
       return res.status(401).json({
@@ -43,11 +43,11 @@ export const login = async (
         .status(401)
         .json({ success: false,errors: { common: "Access denied. Please contact the admin." } });
     }
-    
+
     let judgeInfo = {
       email: judge?.email,
       name: judge?.name,
-      zone:judge?.zone,
+      zone:judge?.zone.name,
       isMain:judge?.isMain,
       id: judge?._id,
       token: judgeGenerateToken(judge?._id, "7d"),
