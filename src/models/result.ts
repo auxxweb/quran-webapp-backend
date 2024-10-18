@@ -2,7 +2,7 @@ import mongoose, { Document } from "mongoose";
 
 interface Result extends Document {
   zone: any;
-  participant: any;
+  participant_id: any;
   startTime: any;
   endTime: any;
   results: any;
@@ -12,36 +12,13 @@ interface Result extends Document {
 const resultSchema = new mongoose.Schema<Result>(
   {
     zone: { type: mongoose.Schema.Types.ObjectId, ref: "Zone" },
-    participant: { type: mongoose.Schema.Types.ObjectId, ref: "Participant" },
-
+    participant_id: { type: mongoose.Schema.Types.ObjectId, ref: "Participant" },
     startTime: {
       type: Date,
     },
     endTime: {
       type: Date,
     },
-    results: [
-      {
-        question: { type: mongoose.Schema.Types.ObjectId, ref: "Question" },
-        startTime: {
-          type: Date,
-        },
-        endTime: {
-          type: Date,
-        },
-        responses: [
-          {
-            judge: { type: mongoose.Schema.Types.ObjectId, ref: "Judge" },
-            score: {
-              type: Number,
-            },
-            answer: {
-              type: String,
-            },
-          },
-        ],
-      },
-    ],
     isDeleted: {
       type: Boolean,
       required: true,
