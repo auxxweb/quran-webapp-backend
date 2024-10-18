@@ -32,9 +32,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.get("/", (req: Request, res: Response) =>
   res.json({ success: true, msg: "Quran_Quiz app server working successfully!" })
 );
+
+app.use("/api/judge", judgeRoute);
 // Admin Routes
- app.use("/api/judge", judgeRoute);
-  
  app.use('/api/admin',adminRoute)
  app.use('/api/admin/auth',adminAuthRoute)
  app.use('/api/admin/zone',adminZoneRoute)
