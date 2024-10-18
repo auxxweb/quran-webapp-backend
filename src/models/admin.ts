@@ -11,7 +11,7 @@ const adminSchema = new mongoose.Schema<Admin>(
   {
     name: {
       type: String,
-      required: true,
+      required: false,
     },
     password: {
       type: String,
