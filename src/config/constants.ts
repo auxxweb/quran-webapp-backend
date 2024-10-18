@@ -6,6 +6,12 @@ export const generateToken = (id: any,expiresTime:any) => {
   const secret: Secret = process.env.JWT_SECRET as Secret;
   return jwt.sign({ id }, secret, { expiresIn: expiresTime });
 };
+
+export const judgeGenerateToken = (id: any,expiresTime:any) => {
+  const secret: Secret = process.env.JWT_SECRET_JUDGE as Secret;
+  return jwt.sign({ id }, secret, { expiresIn: expiresTime });
+};
+
 export const createVerificationCode = () => {
   const otp = Math.floor(100000 + Math.random() * 900000); 
   return otp.toString().padStart(6, '0');

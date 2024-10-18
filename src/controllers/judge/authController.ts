@@ -5,7 +5,7 @@ import { LoginDto } from "../../dto/loginDto";
 import { validate } from "class-validator";
 import { handleValidationErrors } from "../../utils/handleValidationErrors";
 import Judge from "../../models/judge";
-import { generateToken } from "../../config/constants";
+import { generateToken, judgeGenerateToken } from "../../config/constants";
 
 export const login = async (
   req: Request,
@@ -39,13 +39,16 @@ export const login = async (
 
     let judgeInfo = {
       email: judge?.email,
+      zone:judge?.zone,
+      isMain:judge?.isMain,
       id: judge?._id,
-      token: generateToken(judge?._id, "7d"),
+      token: judgeGenerateToken(judge?._id, "7d"),
     };
 
     res.status(200).json({
       success: true,
       data: judgeInfo,
+
       message: "Login successfully",
     });
 
