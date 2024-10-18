@@ -18,7 +18,7 @@ export const login = async (
     const error_messages = await validate(login_dto);
     if (error_messages && error_messages.length > 0) {
       const error = await handleValidationErrors(res, error_messages);
-      throw res.status(401).json({ error });
+      return res.status(401).json({ error });
     }
 
     const { name, password } = req.body;
