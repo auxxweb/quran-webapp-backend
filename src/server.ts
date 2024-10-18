@@ -17,6 +17,7 @@ import adminParticipantRoute from './routes/admin/participantRoutes'
 import adminQuestionRoute from './routes/admin/questionRoutes'
 import adminBundleRoute from './routes/admin/bundleRoutes'
 import adminResultRoute from './routes/admin/resultRoutes'
+import judgeRoute from './routes/judge/index'
 
 import { errorHandler, notFound } from "./middlewares/errorMiddlewares";
 import Admin from "./models/admin";
@@ -32,6 +33,8 @@ app.get("/", (req: Request, res: Response) =>
   res.json({ success: true, msg: "Quran_Quiz app server working successfully!" })
 );
 // Admin Routes
+ app.use("/api/judge", judgeRoute);
+  
  app.use('/api/admin',adminRoute)
  app.use('/api/admin/auth',adminAuthRoute)
  app.use('/api/admin/zone',adminZoneRoute)
