@@ -314,8 +314,8 @@ export const getParticipantQuestions = async (
 
     return res.status(200).json({
       message: "Questions fetched successfully",
-      data: result[0],
       success: true,
+      data: result[0],
     });
   } catch (error) {
     next(error);

@@ -21,13 +21,13 @@ export const login = async (
       throw res.status(401).json({ error });
     }
 
-    const { email, password } = req.body;
+    const { name, password } = req.body;
 
-    const judge = await Judge.findOne({ email: email });
+    const judge = await Judge.findOne({ name: name });
 
     if (!judge) {
       return res.status(401).json({
-        errors: { email: "Account not found, invalid email" },
+        errors: { name: "Account not found, invalid name" },
         success: false,
       });
     }
@@ -40,6 +40,7 @@ export const login = async (
 
     let judgeInfo = {
       email: judge?.email,
+      name: judge?.name,
       zone:judge?.zone,
       isMain:judge?.isMain,
       id: judge?._id,
@@ -49,7 +50,6 @@ export const login = async (
     res.status(200).json({
       success: true,
       data: judgeInfo,
-
       message: "Login successfully",
     });
 
