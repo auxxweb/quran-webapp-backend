@@ -1,13 +1,13 @@
 import { Router } from "express";
-import { getUser, proceedToQuestion } from "../../controllers/judge/userController";
+import { answersSubmit, getUser, proceedToQuestion } from "../../controllers/judge/userController";
 
 const router: Router = Router();
 
 
 router.get("/", getUser);
 
-router.get("/proceed-to-question", proceedToQuestion);
+router.post("/proceed-to-question", proceedToQuestion);
 
-router.get("/proceed-to-question", proceedToQuestion);
+router.post("/submit-answers", answersSubmit);
 
 export default router;
