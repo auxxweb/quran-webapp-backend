@@ -12,8 +12,7 @@ import { handleValidationErrors } from "../../utils/handleValidationErrors";
 import { ResultDto } from "../../dto/resultDto";
 import { AnswersDto } from "../../dto/answers";
 
-
-export const getUser = async (
+export const getUsers = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -50,6 +49,31 @@ export const getUser = async (
       totalPages: Math.ceil(total / limit),
       totalItems: total,
       participants,
+      success: true,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const participant = await Participant.find({ _id: req.params.id });
+    if (!participant) {
+      return res.status(404).json({
+        message: "participant not found",
+        success: false,
+      });
+    }
+
+    return res.status(200).json({
+      message: "participant fetched successfully",
+      participant: participant,
+      success: true,
     });
   } catch (error) {
     next(error);
