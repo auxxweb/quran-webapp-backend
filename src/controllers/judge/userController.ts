@@ -4,8 +4,10 @@ import { validate } from "class-validator";
 
 import Participant from "../../models/participant";
 import Result from "../../models/result";
+import Answer from "../../models/answers";
 import { handleValidationErrors } from "../../utils/handleValidationErrors";
 import { ResultDto } from "../../dto/resultDto";
+import { AnswersDto } from "../../dto/answers";
 
 export const getUser = async (
   req: Request,
@@ -50,7 +52,6 @@ export const getUser = async (
   }
 };
 
-
 export const proceedToQuestion = async (
   req: Request,
   res: Response,
@@ -76,6 +77,42 @@ export const proceedToQuestion = async (
     return res.status(200).json({
       message: "Result saved successfully",
       result: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const answersSubmit = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const answers_dto = plainToClass(AnswersDto, req.body ?? {});
+    const error_messages = await validate(answers_dto);
+    if (error_messages && error_messages.length > 0) {
+      const error = await handleValidationErrors(res, error_messages);
+      throw res.status(401).json({ error });
+    }
+
+    const { question_id, result_id, startTime, endTime, answer, score } =
+      req.body;
+    const data = new Answer({
+      question_id,
+      result_id,
+      judge_id: req.judge._id,
+      startTime,
+      endTime,
+      score,
+      answer,
+    });
+
+    data.save();
+    
+    return res.status(200).json({
+      message: "Result saved successfully",
+      result: data,
     });
   } catch (error) {
     next(error);
