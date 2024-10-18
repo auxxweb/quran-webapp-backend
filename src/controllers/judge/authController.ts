@@ -1,11 +1,12 @@
 import { NextFunction, Request, Response } from "express";
 import { plainToClass } from "class-transformer";
+import { validate } from "class-validator";
+
+import Judge from "../../models/judge";
 
 import { LoginDto } from "../../dto/loginDto";
-import { validate } from "class-validator";
 import { handleValidationErrors } from "../../utils/handleValidationErrors";
-import Judge from "../../models/judge";
-import { generateToken, judgeGenerateToken } from "../../config/constants";
+import {  judgeGenerateToken } from "../../config/constants";
 
 export const login = async (
   req: Request,
