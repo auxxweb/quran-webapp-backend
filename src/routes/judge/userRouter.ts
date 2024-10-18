@@ -12,6 +12,6 @@ router.post("/proceed-to-question", proceedToQuestion);
 
 router.post("/submit-answers", answersSubmit);
 
-router.get("/questions/:participant_id", getParticipantQuestions);
+router.get("/questions/:result_id", getParticipantQuestions);
 
 export default router;

@@ -151,12 +151,13 @@ export const proceedToQuestion = async (
     ]);
 
     if (aggregationResult.length > 0) {
-      const { questionCount, answeredCount } = aggregationResult[0];
+      const { questionCount, answeredCount,_id } = aggregationResult[0];
 
       if (answeredCount < questionCount) {
         return res.status(200).json({
           questionCount,
           answeredCount,
+          _id:_id,
           message: "Participant has not completed all questions in the bundle.",
           success: true,
         });
@@ -164,7 +165,7 @@ export const proceedToQuestion = async (
         return res.status(200).json({
           message:
             "Participant has already completed all questions in the bundle.",
-          success: true,
+          success: false,
         });
       }
     } else {
@@ -245,12 +246,12 @@ export const getParticipantQuestions = async (
   next: NextFunction
 ) => {
   try {
-    const { participant_id } = req.params;
+    const { result_id } = req.params;
 
     const result = await Result.aggregate([
       {
         $match: {
-          participant_id: new mongoose.Types.ObjectId(participant_id),
+          _id: new mongoose.Types.ObjectId(result_id),
         },
       },
       {
