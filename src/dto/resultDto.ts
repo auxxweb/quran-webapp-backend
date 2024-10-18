@@ -8,6 +8,4 @@ export class ResultDto {
     @IsNotEmpty()
     startTime!: Date;
 
-    @IsNotEmpty()
-    endTime!: Date;
 }
