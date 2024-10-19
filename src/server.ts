@@ -25,9 +25,9 @@ import Admin from "./models/admin";
 const app: Express = express();
 
 const corsOptions = {
-  origin:'http://localhost:3000', 
-  credentials:true,
-  optionSuccessStatus:200
+  origin: ['http://localhost:3000', 'https://gedexoquizadmin.auxxweb.in',"https://gedexoquizadmin.auxxweb.in"], 
+  credentials: true,
+  optionsSuccessStatus: 200
 };
 
 

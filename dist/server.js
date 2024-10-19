@@ -32,9 +32,9 @@ const errorMiddlewares_1 = require("./middlewares/errorMiddlewares");
 const admin_1 = __importDefault(require("./models/admin"));
 const app = (0, express_1.default)();
 const corsOptions = {
-    origin: 'http://localhost:3000',
+    origin: ['http://localhost:3000', 'https://gedexoquizadmin.auxxweb.in', "https://gedexoquizadmin.auxxweb.in"],
     credentials: true,
-    optionSuccessStatus: 200
+    optionsSuccessStatus: 200
 };
 app.use((0, cors_1.default)(corsOptions));
 app.use(express_1.default.json());
