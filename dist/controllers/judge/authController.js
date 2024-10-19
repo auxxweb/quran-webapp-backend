@@ -20,7 +20,7 @@ const loginDto_1 = require("../../dto/loginDto");
 const handleValidationErrors_1 = require("../../utils/handleValidationErrors");
 const constants_1 = require("../../config/constants");
 const login = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
+    var _a;
     try {
         const login_dto = (0, class_transformer_1.plainToClass)(loginDto_1.LoginDto, (_a = req.body) !== null && _a !== void 0 ? _a : {});
         const error_messages = yield (0, class_validator_1.validate)(login_dto);

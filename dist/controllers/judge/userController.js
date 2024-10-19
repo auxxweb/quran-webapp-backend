@@ -184,9 +184,15 @@ const proceedToQuestion = (req, res, next) => __awaiter(void 0, void 0, void 0, 
 });
 exports.proceedToQuestion = proceedToQuestion;
 const answersSubmit = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+<<<<<<< HEAD
     var _b;
     try {
         const answers_dto = (0, class_transformer_1.plainToClass)(answers_2.AnswersDto, (_b = req.body) !== null && _b !== void 0 ? _b : {});
+=======
+    var _a;
+    try {
+        const answers_dto = (0, class_transformer_1.plainToClass)(answers_2.AnswersDto, (_a = req.body) !== null && _a !== void 0 ? _a : {});
+>>>>>>> 6d93fb63a343d74802a4ba0a1950fd91a1a6b180
         const error_messages = yield (0, class_validator_1.validate)(answers_dto);
         if (error_messages && error_messages.length > 0) {
             const error = yield (0, handleValidationErrors_1.handleValidationErrors)(res, error_messages);
