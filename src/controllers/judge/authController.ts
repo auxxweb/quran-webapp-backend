@@ -23,7 +23,7 @@ export const login = async (
 
     const { email, password } = req.body;
 
-    const judge = await Judge.findOne({ email: email }).populate('zone');
+    const judge = await Judge.findOne({ email: email,isDeleted:false }).populate('zone');
 
     if (!judge) {
       return res.status(401).json({
@@ -47,7 +47,9 @@ export const login = async (
     let judgeInfo = {
       email: judge?.email,
       name: judge?.name,
+      image:judge?.image,
       zone:judge?.zone.name,
+      zoneId:judge?.zone?._id,
       isMain:judge?.isMain,
       id: judge?._id,
       token: judgeGenerateToken(judge?._id, "7d"),

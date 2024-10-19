@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendEmail = exports.createVerificationCode = exports.generateToken = void 0;
+exports.sendEmail = exports.createVerificationCode = exports.judgeGenerateToken = exports.generateToken = void 0;
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
@@ -22,6 +22,11 @@ const generateToken = (id, expiresTime) => {
     return jsonwebtoken_1.default.sign({ id }, secret, { expiresIn: expiresTime });
 };
 exports.generateToken = generateToken;
+const judgeGenerateToken = (id, expiresTime) => {
+    const secret = process.env.JWT_SECRET_JUDGE;
+    return jsonwebtoken_1.default.sign({ id }, secret, { expiresIn: expiresTime });
+};
+exports.judgeGenerateToken = judgeGenerateToken;
 const createVerificationCode = () => {
     const otp = Math.floor(100000 + Math.random() * 900000);
     return otp.toString().padStart(6, '0');

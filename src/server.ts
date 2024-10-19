@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import bodyParser from 'body-parser'
 import cors from "cors";
 import bcrypt from "bcryptjs";
+import { Server } from "socket.io";
 
 dotenv.config();
 import './config/connectDB'
@@ -75,4 +76,36 @@ app.use(errorHandler);
 
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`listening on ${PORT}`));
+// app.listen(PORT, () => console.log(`listening on ${PORT}`));
+const server = app.listen(PORT,() => console.log(`listening on ${PORT}`))
+export const io = new Server(server, {
+    pingTimeout: 60000,
+    cors: {
+      origin: '*', 
+      methods: ['GET', 'POST',"PATCH","DELETE"],
+      credentials: false,
+    },
+  });
+  
+  io.on("connection", (socket) => {
+    socket.on('join', (zoneId) => {
+      console.log(`Zone ${socket.id} joined room ${zoneId}`);
+      socket.join(zoneId);
+      socket.emit("connected");
+    });
+  
+    socket.on('selected-participant', ({ success, userId, zoneId }) => {
+      console.log(`Broadcasting selected participant to zone: ${zoneId}`);
+      // Send the event to all users in the room/zone
+      io.to(zoneId).emit('selected-participant', { success, userId });
+    });
+    socket.on('proceed-question', ({ success, resultId, zoneId }) => {
+      console.log(`Broadcasting proceed to question to zone: ${zoneId}`);
+      // Send the event to all users in the room/zone
+      io.to(zoneId).emit('proceed-question', { success, resultId });
+    });
+  
+    socket.on('disconnect', () => {
+      console.log(`Zone ${socket.id} disconnected`);
+    });
+  });
