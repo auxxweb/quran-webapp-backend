@@ -19,6 +19,7 @@ import adminQuestionRoute from './routes/admin/questionRoutes'
 import adminBundleRoute from './routes/admin/bundleRoutes'
 import adminResultRoute from './routes/admin/resultRoutes'
 import judgeRoute from './routes/judge/index'
+import participantRoute from './routes/participant/index'
 
 import { errorHandler, notFound } from "./middlewares/errorMiddlewares";
 import Admin from "./models/admin";
@@ -43,8 +44,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.get("/", (req: Request, res: Response) =>
   res.json({ success: true, msg: "Quran_Quiz app server working successfully!" })
 );
-
+// Judge Routes
 app.use("/api/judge", judgeRoute);
+// Judge Routes
+app.use("/api/participant", participantRoute);
 // Admin Routes
  app.use('/api/admin',adminRoute)
  app.use('/api/admin/auth',adminAuthRoute)
@@ -96,13 +99,15 @@ export const io = new Server(server, {
   
     socket.on('selected-participant', ({ success, userId, zoneId }) => {
       console.log(`Broadcasting selected participant to zone: ${zoneId}`);
-      // Send the event to all users in the room/zone
       io.to(zoneId).emit('selected-participant', { success, userId });
     });
-    socket.on('proceed-question', ({ success, resultId, zoneId }) => {
+    socket.on('proceed-question', ({ success, resultId, zoneId,questionId }) => {
       console.log(`Broadcasting proceed to question to zone: ${zoneId}`);
-      // Send the event to all users in the room/zone
-      io.to(zoneId).emit('proceed-question', { success, resultId });
+      io.to(zoneId).emit('proceed-question', { success, resultId,questionId });
+    });
+    socket.on('question-completed', ({ success, zoneId }) => {
+      console.log(`Broadcasting proceed to question to zone: ${zoneId}`);
+      io.to(zoneId).emit('question-completed', { success });
     });
   
     socket.on('disconnect', () => {

@@ -27,6 +27,9 @@ const resultSchema = new mongoose_1.default.Schema({
     endTime: {
         type: Date,
     },
+    currentQuestion: {
+        type: String,
+    },
     isCompleted: {
         type: Boolean,
         required: true,

@@ -30,6 +30,7 @@ const questionRoutes_1 = __importDefault(require("./routes/admin/questionRoutes"
 const bundleRoutes_1 = __importDefault(require("./routes/admin/bundleRoutes"));
 const resultRoutes_1 = __importDefault(require("./routes/admin/resultRoutes"));
 const index_1 = __importDefault(require("./routes/judge/index"));
+const index_2 = __importDefault(require("./routes/participant/index"));
 const errorMiddlewares_1 = require("./middlewares/errorMiddlewares");
 const admin_1 = __importDefault(require("./models/admin"));
 const app = (0, express_1.default)();
@@ -43,7 +44,10 @@ app.use(express_1.default.json());
 app.use(body_parser_1.default.json());
 app.use(body_parser_1.default.urlencoded({ extended: true }));
 app.get("/", (req, res) => res.json({ success: true, msg: "Quran_Quiz app server working successfully!" }));
+// Judge Routes
 app.use("/api/judge", index_1.default);
+// Judge Routes
+app.use("/api/participant", index_2.default);
 // Admin Routes
 app.use('/api/admin', adminRoutes_1.default);
 app.use('/api/admin/auth', authRoutes_1.default);
@@ -86,13 +90,15 @@ exports.io.on("connection", (socket) => {
     });
     socket.on('selected-participant', ({ success, userId, zoneId }) => {
         console.log(`Broadcasting selected participant to zone: ${zoneId}`);
-        // Send the event to all users in the room/zone
         exports.io.to(zoneId).emit('selected-participant', { success, userId });
     });
-    socket.on('proceed-question', ({ success, resultId, zoneId }) => {
+    socket.on('proceed-question', ({ success, resultId, zoneId, questionId }) => {
         console.log(`Broadcasting proceed to question to zone: ${zoneId}`);
-        // Send the event to all users in the room/zone
-        exports.io.to(zoneId).emit('proceed-question', { success, resultId });
+        exports.io.to(zoneId).emit('proceed-question', { success, resultId, questionId });
+    });
+    socket.on('question-completed', ({ success, zoneId }) => {
+        console.log(`Broadcasting proceed to question to zone: ${zoneId}`);
+        exports.io.to(zoneId).emit('question-completed', { success });
     });
     socket.on('disconnect', () => {
         console.log(`Zone ${socket.id} disconnected`);

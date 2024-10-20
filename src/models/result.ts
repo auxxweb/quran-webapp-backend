@@ -7,6 +7,7 @@ interface Result extends Document {
   startTime: any;
   endTime: any;
   results: any;
+  currentQuestion: string;
   isDeleted: boolean;
   isCompleted: boolean;
 }
@@ -34,6 +35,9 @@ const resultSchema = new mongoose.Schema<Result>(
     },
     endTime: {
       type: Date,
+    },
+    currentQuestion: {
+      type: String,
     },
     isCompleted: {
       type: Boolean,
