@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from 'mongoose'
 
 const answersSchema = new mongoose.Schema(
   {
@@ -23,15 +23,17 @@ const answersSchema = new mongoose.Schema(
     },
     endTime: {
       type: Date,
-      required: true,
     },
     score: {
       type: Number,
-      required: true,
     },
     answer: {
       type: String,
+    },
+    isCompleted: {
+      type: Boolean,
       required: true,
+      default: false,
     },
   },
   {
@@ -39,4 +41,5 @@ const answersSchema = new mongoose.Schema(
   }
 );
 
-export default mongoose.model("answers", answersSchema);
+const Answer = mongoose.model("answers", answersSchema);
+export default Answer

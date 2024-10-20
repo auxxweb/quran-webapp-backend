@@ -8,6 +8,7 @@ interface Result extends Document {
   endTime: any;
   results: any;
   isDeleted: boolean;
+  isCompleted: boolean;
 }
 
 const resultSchema = new mongoose.Schema<Result>(
@@ -33,6 +34,11 @@ const resultSchema = new mongoose.Schema<Result>(
     },
     endTime: {
       type: Date,
+    },
+    isCompleted: {
+      type: Boolean,
+      required: true,
+      default: false,
     },
     isDeleted: {
       type: Boolean,

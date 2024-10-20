@@ -11,6 +11,7 @@ import Bundle from "../../models/bundle";
 import { handleValidationErrors } from "../../utils/handleValidationErrors";
 import { ResultDto } from "../../dto/resultDto";
 import { AnswersDto } from "../../dto/answers";
+import Judge from "../../models/judge";
 
 export const getUsers = async (
   req: Request,
@@ -92,7 +93,7 @@ export const proceedToQuestion = async (
       const error = await handleValidationErrors(res, error_messages);
       throw res.status(401).json({ error });
     }
-    const { participant_id, startTime, endTime } = req.body;
+    const { participant_id, startTime } = req.body;
 
     const participant = await Participant.findOne({ _id: participant_id });
 
@@ -135,9 +136,20 @@ export const proceedToQuestion = async (
         },
       },
       {
+        $unwind: "$answeredQuestions",
+      },
+      {
+        $group: {
+          _id: "$_id",
+          uniqueAnsweredQuestions: {
+            $addToSet: "$answeredQuestions.question_id", // Set of unique answered question IDs
+          },
+          questionCount: { $first: { $size: "$bundle.questions" } }, // Total questions in the bundle
+        },
+      },
+      {
         $addFields: {
-          questionCount: { $size: "$bundle.questions" },
-          answeredCount: { $size: "$answeredQuestions" },
+          answeredCount: { $size: "$uniqueAnsweredQuestions" }, // Count of unique answered questions
         },
       },
       {
@@ -150,14 +162,16 @@ export const proceedToQuestion = async (
       },
     ]);
 
+    console.log(aggregationResult, "aggregationResult");
+
     if (aggregationResult.length > 0) {
-      const { questionCount, answeredCount,_id } = aggregationResult[0];
+      const { questionCount, answeredCount, _id } = aggregationResult[0];
 
       if (answeredCount < questionCount) {
         return res.status(200).json({
           questionCount,
           answeredCount,
-          _id:_id,
+          _id: _id,
           message: "Participant has not completed all questions in the bundle.",
           success: true,
         });
@@ -169,18 +183,41 @@ export const proceedToQuestion = async (
         });
       }
     } else {
-      const randomBundle = await Bundle.aggregate([{ $sample: { size: 1 } }]);
+      const randomBundle = await Bundle.aggregate([
+        { $match: { isDeleted: false } }, // Filter out deleted bundles
+        { $sample: { size: 1 } }, // Sample one random bundle
+      ]);
       const bundle_id = randomBundle.length > 0 ? randomBundle[0]._id : null;
-
+      const firstQuestion =
+        randomBundle.length > 0 ? randomBundle[0]?.questions[0] : null;
+      const bundle = await Bundle.findOne({ _id: bundle_id, isDeleted: false });
+      if (!bundle) {
+        return res.status(200).json({
+          message: "Bundle not found",
+          success: false,
+        });
+      }
       const result = new Result({
         participant_id: participant_id,
         bundle_id,
         startTime,
-        endTime,
         zone: req.judge.zone,
       });
-
       await result.save();
+
+      const judges = await Judge.find(
+        { zone: req.judge.zone, isDeleted: false, isMain: false },
+        { _id: 1 }
+      );
+      const answersPromises = judges.map(async (item: any) => {
+        const createdAnswer = await Answer.create({
+          question_id: firstQuestion,
+          result_id: result?._id,
+          judge_id: item._id,
+          startTime,
+        });
+      });
+      await Promise.all(answersPromises);
 
       return res.status(200).json({
         message: "Result saved successfully",
@@ -193,6 +230,72 @@ export const proceedToQuestion = async (
   }
 };
 
+export const proceedToNextQuestion = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+ 
+    
+    const judge = req.judge;
+    const { question_id, result_id,startTime } =
+      req.body;
+      if(!question_id||! result_id||!startTime){
+        return res.status(400).json({
+          message: "required field not provided",
+          success: false,
+        });
+      }
+console.log(req.body,"req.body");
+
+
+    const answerData = await Answer.findOne({
+      result_id,
+      question_id,
+      judge_id: judge?._id,
+      isCompleted: true,
+    });
+
+    if (answerData) {
+      return res.status(400).json({
+        message: "Answer already submitted",
+        success: false,
+      });
+    }
+    const judges = await Judge.find(
+      { zone: req.judge.zone, isDeleted: false, isMain: false },
+      { _id: 1 }
+    );
+    const answersPromises = judges.map(async (item: any) => {
+      const createdAnswer = await Answer.create({
+        question_id,
+        result_id,
+        judge_id: item._id,
+        startTime,
+      });
+    });
+   const data= await Promise.all(answersPromises);
+
+    // const data = new Answer({
+    //   question_id,
+    //   result_id,
+    //   startTime,
+    //   judge_id: req.judge._id,
+  
+    // });
+
+    // data.save();
+
+    return res.status(200).json({
+      message: "Result saved successfully",
+      result: data,
+      success: true,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 export const answersSubmit = async (
   req: Request,
   res: Response,
@@ -205,11 +308,17 @@ export const answersSubmit = async (
       const error = await handleValidationErrors(res, error_messages);
       throw res.status(401).json({ error });
     }
-
-    const { question_id, result_id, startTime, endTime, answer, score } =
+    
+    const judge = req.judge;
+    const { question_id, result_id, answer_id, endTime, answer, score } =
       req.body;
 
-    const answerData = await Answer.findOne({ result_id, question_id });
+    const answerData = await Answer.findOne({
+      result_id,
+      question_id,
+      judge_id: judge?._id,
+      isCompleted: true,
+    });
 
     if (answerData) {
       return res.status(400).json({
@@ -218,17 +327,22 @@ export const answersSubmit = async (
       });
     }
 
-    const data = new Answer({
-      question_id,
-      result_id,
-      judge_id: req.judge._id,
-      startTime,
-      endTime,
-      score,
-      answer,
-    });
+    const data = await Answer.findOneAndUpdate(
+      { _id: answer_id},
+      { endTime, score, answer,isCompleted:true },
+      { new: true }
+    );
+    // const data = new Answer({
+    //   question_id,
+    //   result_id,
+    //   judge_id: req.judge._id,
+    //   startTime,
+    //   endTime,
+    //   score,
+    //   answer,
+    // });
 
-    data.save();
+    // data.save();
 
     return res.status(200).json({
       message: "Result saved successfully",
@@ -301,24 +415,26 @@ export const getParticipantQuestions = async (
               $project: {
                 answer: 1,
                 score: 1,
+                judge_id: 1,
+                isCompleted: 1,
               },
             },
           ],
-          as: "submittedAnswer",
-        },
-      },
-      {
-        $addFields: {
-          "questions.submittedAnswer": {
-            $arrayElemAt: ["$submittedAnswer", 0],
-          },
+          as: "submittedAnswers", // Keep all submitted answers as an array
         },
       },
       {
         $group: {
           _id: "$_id",
           bundle_id: { $first: "$bundle_id" },
-          questions: { $push: "$questions" },
+          questions: {
+            $push: {
+              _id: "$questions._id",
+              question: "$questions.question",
+              answer: "$questions.answer",
+              submittedAnswers: "$submittedAnswers", // Now an array of all answers
+            },
+          },
         },
       },
       {

@@ -15,7 +15,7 @@ export class AnswersDto {
     answer!: string;
 
     @IsNotEmpty()
-    startTime!: Date;
+    answer_id!: Date;
 
     @IsNotEmpty()
     endTime!: Date;
