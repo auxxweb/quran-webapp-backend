@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getSingleResultsDetails = exports.getResultsDetails = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const result_1 = __importDefault(require("../../models/result"));
+const answers_1 = __importDefault(require("../../models/answers"));
 // GET || get Result details
 exports.getResultsDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const page = parseInt(req.query.page) || 1;
@@ -23,16 +24,16 @@ exports.getResultsDetails = (0, express_async_handler_1.default)((req, res) => _
     const sortOrder = req.query.sortOrder === "asc" ? 1 : -1;
     const searchData = req.query.search || "";
     const zones = req.query.zones || "";
-    const query = { isDeleted: false };
+    const query = { isDeleted: false, isCompleted: true };
     if (searchData !== "") {
-        query.participant.name = { $regex: new RegExp(`^${searchData}.*`, "i") };
+        query.participant_id.name = { $regex: new RegExp(`^${searchData}.*`, "i") };
     }
     if (zones !== "") {
         query.zone = { $in: zones };
     }
     const results = yield result_1.default.find(query)
-        .populate("zone")
-        .populate("participant")
+        .populate("zone", '_id name ')
+        .populate("participant_id", "name image")
         .sort({ [sortBy]: sortOrder })
         .skip((page - 1) * limit)
         .limit(limit);
@@ -52,22 +53,12 @@ exports.getSingleResultsDetails = (0, express_async_handler_1.default)((req, res
         res.status(400);
         throw new Error("resultId is required");
     }
-    const result = yield result_1.default.findOne({ _id: resultId, isDeleted: false })
-        .populate("zone")
-        .populate("participant")
-        .populate({
-        path: "results",
-        populate: [
-            {
-                path: "question",
-                model: "Question",
-            },
-            {
-                path: "responses.judge",
-                model: "Judge",
-            },
-        ],
-    });
+    const result = yield result_1.default.findOne({ _id: resultId, isDeleted: false, isCompleted: true })
+        .populate("zone", '_id name ')
+        .populate("participant_id", "_id name image email phone address");
+    const answers = yield answers_1.default.findOne({ result_id: resultId, isDeleted: false, isCompleted: true })
+        .populate("question_id", '_id name ')
+        .populate("Judge", "_id name image");
     if (!result) {
         res.status(400);
         throw new Error("Result not found");
@@ -75,6 +66,7 @@ exports.getSingleResultsDetails = (0, express_async_handler_1.default)((req, res
     res.status(200).json({
         success: true,
         result: result,
+        answers: answers,
         msg: "Result details successfully retrieved",
     });
 }));

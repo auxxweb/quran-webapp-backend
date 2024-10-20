@@ -17,6 +17,9 @@ const adminSchema = new mongoose_1.default.Schema({
         required: true,
         unique: true,
     },
+    forgotId: {
+        type: String,
+    },
     isDeleted: {
         type: Boolean,
         required: true,

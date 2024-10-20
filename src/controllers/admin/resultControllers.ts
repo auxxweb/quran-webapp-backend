@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import asyncHandler from "express-async-handler";
 import Result from "../../models/result";
+import Answer from "../../models/answers";
 
 // GET || get Result details
 export const getResultsDetails = asyncHandler(
@@ -12,17 +13,17 @@ export const getResultsDetails = asyncHandler(
     const searchData = (req.query.search as string) || "";
     const zones = (req.query.zones as any) || "";
 
-    const query: any = { isDeleted: false };
+    const query: any = { isDeleted: false,isCompleted:true };
     if (searchData !== "") {
-      query.participant.name = { $regex: new RegExp(`^${searchData}.*`, "i") };
+      query.participant_id.name = { $regex: new RegExp(`^${searchData}.*`, "i") };
     }
     if (zones !== "") {
       query.zone = { $in: zones };
     }
 
     const results = await Result.find(query)
-      .populate("zone")
-      .populate("participant")
+      .populate("zone",'_id name ')
+      .populate("participant_id","name image")
       .sort({ [sortBy]: sortOrder })
       .skip((page - 1) * limit)
       .limit(limit);
@@ -46,29 +47,25 @@ export const getSingleResultsDetails = asyncHandler(
       res.status(400);
       throw new Error("resultId is required");
     }
-    const result = await Result.findOne({ _id: resultId, isDeleted: false })
-      .populate("zone")
-      .populate("participant")
-      .populate({
-        path: "results",
-        populate: [
-          {
-            path: "question",
-            model: "Question",
-          },
-          {
-            path: "responses.judge",
-            model: "Judge",
-          },
-        ],
-      });
+    const result = await Result.findOne({ _id: resultId, isDeleted: false,isCompleted:true })
+    .populate("zone",'_id name ')
+    .populate("participant_id","_id name image email phone address")
+    const answers = await Answer.findOne({ result_id: resultId, isDeleted: false,isCompleted:true })
+    .populate("question_id",'_id name ')
+    .populate("Judge","_id name image")
+
+
+
     if (!result) {
       res.status(400);
       throw new Error("Result not found");
     }
+   
+
     res.status(200).json({
       success: true,
       result: result,
+      answers:answers,
       msg: "Result details successfully retrieved",
     });
   }

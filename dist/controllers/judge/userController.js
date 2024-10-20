@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getParticipantQuestions = exports.answersSubmit = exports.proceedToQuestion = exports.getUser = exports.getUsers = void 0;
+exports.getParticipantQuestions = exports.answersSubmit = exports.proceedToNextQuestion = exports.proceedToQuestion = exports.getUser = exports.getUsers = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
@@ -23,6 +23,7 @@ const bundle_1 = __importDefault(require("../../models/bundle"));
 const handleValidationErrors_1 = require("../../utils/handleValidationErrors");
 const resultDto_1 = require("../../dto/resultDto");
 const answers_2 = require("../../dto/answers");
+const judge_1 = __importDefault(require("../../models/judge"));
 const getUsers = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { currentPage = 1, pageSize = 10, search } = req.query;
@@ -81,7 +82,7 @@ const getUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.getUser = getUser;
 const proceedToQuestion = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+    var _a, _b;
     try {
         const result_dto = (0, class_transformer_1.plainToClass)(resultDto_1.ResultDto, (_a = req.body) !== null && _a !== void 0 ? _a : {});
         const error_messages = yield (0, class_validator_1.validate)(result_dto);
@@ -89,7 +90,7 @@ const proceedToQuestion = (req, res, next) => __awaiter(void 0, void 0, void 0, 
             const error = yield (0, handleValidationErrors_1.handleValidationErrors)(res, error_messages);
             throw res.status(401).json({ error });
         }
-        const { participant_id, startTime, endTime } = req.body;
+        const { participant_id, startTime } = req.body;
         const participant = yield participant_1.default.findOne({ _id: participant_id });
         if (participant == null) {
             return res.status(400).json({
@@ -128,9 +129,20 @@ const proceedToQuestion = (req, res, next) => __awaiter(void 0, void 0, void 0, 
                 },
             },
             {
+                $unwind: "$answeredQuestions",
+            },
+            {
+                $group: {
+                    _id: "$_id",
+                    uniqueAnsweredQuestions: {
+                        $addToSet: "$answeredQuestions.question_id", // Set of unique answered question IDs
+                    },
+                    questionCount: { $first: { $size: "$bundle.questions" } }, // Total questions in the bundle
+                },
+            },
+            {
                 $addFields: {
-                    questionCount: { $size: "$bundle.questions" },
-                    answeredCount: { $size: "$answeredQuestions" },
+                    answeredCount: { $size: "$uniqueAnsweredQuestions" }, // Count of unique answered questions
                 },
             },
             {
@@ -142,6 +154,7 @@ const proceedToQuestion = (req, res, next) => __awaiter(void 0, void 0, void 0, 
                 },
             },
         ]);
+        console.log(aggregationResult, "aggregationResult");
         if (aggregationResult.length > 0) {
             const { questionCount, answeredCount, _id } = aggregationResult[0];
             if (answeredCount < questionCount) {
@@ -161,16 +174,36 @@ const proceedToQuestion = (req, res, next) => __awaiter(void 0, void 0, void 0, 
             }
         }
         else {
-            const randomBundle = yield bundle_1.default.aggregate([{ $sample: { size: 1 } }]);
+            const randomBundle = yield bundle_1.default.aggregate([
+                { $match: { isDeleted: false } }, // Filter out deleted bundles
+                { $sample: { size: 1 } }, // Sample one random bundle
+            ]);
             const bundle_id = randomBundle.length > 0 ? randomBundle[0]._id : null;
+            const firstQuestion = randomBundle.length > 0 ? (_b = randomBundle[0]) === null || _b === void 0 ? void 0 : _b.questions[0] : null;
+            const bundle = yield bundle_1.default.findOne({ _id: bundle_id, isDeleted: false });
+            if (!bundle) {
+                return res.status(200).json({
+                    message: "Bundle not found",
+                    success: false,
+                });
+            }
             const result = new result_1.default({
                 participant_id: participant_id,
                 bundle_id,
                 startTime,
-                endTime,
                 zone: req.judge.zone,
             });
             yield result.save();
+            const judges = yield judge_1.default.find({ zone: req.judge.zone, isDeleted: false, isMain: false }, { _id: 1 });
+            const answersPromises = judges.map((item) => __awaiter(void 0, void 0, void 0, function* () {
+                const createdAnswer = yield answers_1.default.create({
+                    question_id: firstQuestion,
+                    result_id: result === null || result === void 0 ? void 0 : result._id,
+                    judge_id: item._id,
+                    startTime,
+                });
+            }));
+            yield Promise.all(answersPromises);
             return res.status(200).json({
                 message: "Result saved successfully",
                 result: result,
@@ -183,39 +216,91 @@ const proceedToQuestion = (req, res, next) => __awaiter(void 0, void 0, void 0, 
     }
 });
 exports.proceedToQuestion = proceedToQuestion;
-const answersSubmit = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-<<<<<<< HEAD
-    var _b;
+const proceedToNextQuestion = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const answers_dto = (0, class_transformer_1.plainToClass)(answers_2.AnswersDto, (_b = req.body) !== null && _b !== void 0 ? _b : {});
-=======
-    var _a;
-    try {
-        const answers_dto = (0, class_transformer_1.plainToClass)(answers_2.AnswersDto, (_a = req.body) !== null && _a !== void 0 ? _a : {});
->>>>>>> 6d93fb63a343d74802a4ba0a1950fd91a1a6b180
-        const error_messages = yield (0, class_validator_1.validate)(answers_dto);
-        if (error_messages && error_messages.length > 0) {
-            const error = yield (0, handleValidationErrors_1.handleValidationErrors)(res, error_messages);
-            throw res.status(401).json({ error });
+        const judge = req.judge;
+        const { question_id, result_id, startTime } = req.body;
+        if (!question_id || !result_id || !startTime) {
+            return res.status(400).json({
+                message: "required field not provided",
+                success: false,
+            });
         }
-        const { question_id, result_id, startTime, endTime, answer, score } = req.body;
-        const answerData = yield answers_1.default.findOne({ result_id, question_id });
+        console.log(req.body, "req.body");
+        const answerData = yield answers_1.default.findOne({
+            result_id,
+            question_id,
+            judge_id: judge === null || judge === void 0 ? void 0 : judge._id,
+            isCompleted: true,
+        });
         if (answerData) {
             return res.status(400).json({
                 message: "Answer already submitted",
                 success: false,
             });
         }
-        const data = new answers_1.default({
-            question_id,
-            result_id,
-            judge_id: req.judge._id,
-            startTime,
-            endTime,
-            score,
-            answer,
+        const judges = yield judge_1.default.find({ zone: req.judge.zone, isDeleted: false, isMain: false }, { _id: 1 });
+        const answersPromises = judges.map((item) => __awaiter(void 0, void 0, void 0, function* () {
+            const createdAnswer = yield answers_1.default.create({
+                question_id,
+                result_id,
+                judge_id: item._id,
+                startTime,
+            });
+        }));
+        const data = yield Promise.all(answersPromises);
+        // const data = new Answer({
+        //   question_id,
+        //   result_id,
+        //   startTime,
+        //   judge_id: req.judge._id,
+        // });
+        // data.save();
+        return res.status(200).json({
+            message: "Result saved successfully",
+            result: data,
+            success: true,
         });
-        data.save();
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.proceedToNextQuestion = proceedToNextQuestion;
+const answersSubmit = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _c;
+    try {
+        const answers_dto = (0, class_transformer_1.plainToClass)(answers_2.AnswersDto, (_c = req.body) !== null && _c !== void 0 ? _c : {});
+        const error_messages = yield (0, class_validator_1.validate)(answers_dto);
+        if (error_messages && error_messages.length > 0) {
+            const error = yield (0, handleValidationErrors_1.handleValidationErrors)(res, error_messages);
+            throw res.status(401).json({ error });
+        }
+        const judge = req.judge;
+        const { question_id, result_id, answer_id, endTime, answer, score } = req.body;
+        const answerData = yield answers_1.default.findOne({
+            result_id,
+            question_id,
+            judge_id: judge === null || judge === void 0 ? void 0 : judge._id,
+            isCompleted: true,
+        });
+        if (answerData) {
+            return res.status(400).json({
+                message: "Answer already submitted",
+                success: false,
+            });
+        }
+        const data = yield answers_1.default.findOneAndUpdate({ _id: answer_id }, { endTime, score, answer, isCompleted: true }, { new: true });
+        // const data = new Answer({
+        //   question_id,
+        //   result_id,
+        //   judge_id: req.judge._id,
+        //   startTime,
+        //   endTime,
+        //   score,
+        //   answer,
+        // });
+        // data.save();
         return res.status(200).json({
             message: "Result saved successfully",
             result: data,
@@ -283,24 +368,26 @@ const getParticipantQuestions = (req, res, next) => __awaiter(void 0, void 0, vo
                             $project: {
                                 answer: 1,
                                 score: 1,
+                                judge_id: 1,
+                                isCompleted: 1,
                             },
                         },
                     ],
-                    as: "submittedAnswer",
-                },
-            },
-            {
-                $addFields: {
-                    "questions.submittedAnswer": {
-                        $arrayElemAt: ["$submittedAnswer", 0],
-                    },
+                    as: "submittedAnswers", // Keep all submitted answers as an array
                 },
             },
             {
                 $group: {
                     _id: "$_id",
                     bundle_id: { $first: "$bundle_id" },
-                    questions: { $push: "$questions" },
+                    questions: {
+                        $push: {
+                            _id: "$questions._id",
+                            question: "$questions.question",
+                            answer: "$questions.answer",
+                            submittedAnswers: "$submittedAnswers", // Now an array of all answers
+                        },
+                    },
                 },
             },
             {

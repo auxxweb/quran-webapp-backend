@@ -19,7 +19,7 @@ router
   .get(adminProtect, getQuestionDetails)
   .delete(adminProtect, deleteQuestionDetails);
 
-  router.get("/:questionId",adminProtect,getSingleQuestionDetails)
   router.get("/all", adminProtect,getAllQuestionsNames)
+  router.get("/:questionId",adminProtect,getSingleQuestionDetails)
 
 export default router;

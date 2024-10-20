@@ -1,19 +1,22 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const mongoose = require("mongoose");
-const answersSchema = new mongoose.Schema({
+const mongoose_1 = __importDefault(require("mongoose"));
+const answersSchema = new mongoose_1.default.Schema({
     question_id: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: mongoose_1.default.Schema.Types.ObjectId,
         ref: "Question",
         required: true,
     },
     result_id: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: mongoose_1.default.Schema.Types.ObjectId,
         ref: "Result",
         required: true,
     },
     judge_id: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: mongoose_1.default.Schema.Types.ObjectId,
         ref: "Judge",
         required: true,
     },
@@ -23,17 +26,20 @@ const answersSchema = new mongoose.Schema({
     },
     endTime: {
         type: Date,
-        required: true,
     },
     score: {
         type: Number,
-        required: true,
     },
     answer: {
         type: String,
+    },
+    isCompleted: {
+        type: Boolean,
         required: true,
+        default: false,
     },
 }, {
     timestamps: true,
 });
-exports.default = mongoose.model("answers", answersSchema);
+const Answer = mongoose_1.default.model("answers", answersSchema);
+exports.default = Answer;

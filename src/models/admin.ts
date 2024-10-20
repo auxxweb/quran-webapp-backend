@@ -4,6 +4,7 @@ interface Admin extends Document {
   name: string;
   password: string;
   email: string;
+  forgotId: string;
   isDeleted: boolean;
 }
 
@@ -16,10 +17,14 @@ const adminSchema = new mongoose.Schema<Admin>(
     password: {
       type: String,
     },
+   
     email: {
       type: String,
       required: true,
       unique: true,
+    },
+    forgotId: {
+      type: String,
     },
     isDeleted: {
       type: Boolean,
