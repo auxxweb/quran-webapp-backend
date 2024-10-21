@@ -23,7 +23,7 @@ exports.adminProtect = (0, express_async_handler_1.default)((req, res, next) => 
         try {
             token = req.headers.authorization.split(" ")[1];
             const decoded = jsonwebtoken_1.default.verify(token, secret);
-            req.admin = yield admin_1.default.findOne({ _id: decoded.id, isDeleted: false }).select("-password");
+            req.admin = yield admin_1.default.findOne({ _id: decoded.id, isDeleted: false });
             next();
         }
         catch (error) {
