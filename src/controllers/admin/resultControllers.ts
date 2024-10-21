@@ -20,23 +20,27 @@ export const getResultsDetails = asyncHandler(
       query.zone = { $in: zones };
     }
 
-    const participantMatch:any = {};
+    const participantMatch: any = {};
     if (searchData !== "") {
-      participantMatch["name"] = { $regex: new RegExp(`^${searchData}.*`, "i") };
+      participantMatch["name"] = {
+        $regex: new RegExp(`^${searchData}.*`, "i"),
+      };
     }
 
     const results = await Result.find(query)
       .populate({
         path: "participant_id",
         select: "name image",
-        match: participantMatch, 
+        match: participantMatch,
       })
       .populate("zone", "_id name")
       .sort({ [sortBy]: sortOrder })
       .skip((page - 1) * limit)
       .limit(limit);
 
-    const filteredResults = results.filter((result: any) => result.participant_id !== null);
+    const filteredResults = results.filter(
+      (result: any) => result.participant_id !== null
+    );
 
     const resultIds = filteredResults.map((result: any) => result._id);
 
@@ -72,8 +76,6 @@ export const getResultsDetails = asyncHandler(
   }
 );
 
-
-
 // GET || get single Result details
 export const getSingleResultsDetails = asyncHandler(
   async (req: Request, res: Response) => {
@@ -82,26 +84,80 @@ export const getSingleResultsDetails = asyncHandler(
       res.status(400);
       throw new Error("resultId is required");
     }
-    const result = await Result.findOne({ _id: resultId, isDeleted: false,isCompleted:true })
-    .populate("zone",'_id name ')
-    .populate("participant_id","_id name image email phone address")
-    const answers = await Answer.findOne({ result_id: resultId, isDeleted: false,isCompleted:true })
-    .populate("question_id",'_id name ')
-    .populate("Judge","_id name image")
 
-
+    // Fetch the result
+    const result = await Result.findOne({
+      _id: resultId,
+      isDeleted: false,
+      isCompleted: true,
+    })
+      .populate("zone", "_id name ")
+      .populate("participant_id", "_id name image email phone address");
 
     if (!result) {
       res.status(400);
       throw new Error("Result not found");
     }
-   
+
+    // Fetch the answers for the given result
+    const answers = await Answer.find({
+      result_id: resultId,
+      isCompleted: true,
+    })
+      .populate("question_id", "_id name ")
+      .populate("judge_id", "_id name image isMain");
+
+    const groupedAnswers: any = {};
+    let totalScore = 0;
+
+    answers.forEach((answer:any) => {
+      if (answer.judge_id.isMain) {
+        if (!groupedAnswers[answer.question_id._id]) {
+          groupedAnswers[answer.question_id._id] = {
+            question_id: answer.question_id._id,
+            question_name: answer.question_id.name,
+            startTime: answer.startTime,
+            endTime: answer.endTime,
+            totalScore: 0, 
+            answers: [], 
+          };
+        }
+      } else {
+        if (!groupedAnswers[answer.question_id._id]) {
+          groupedAnswers[answer.question_id._id] = {
+            question_id: answer.question_id._id,
+            question_name: answer.question_id.name,
+            startTime: null, 
+            endTime: null, 
+            totalScore: 0, 
+            answers: [],
+          };
+        }
+
+        groupedAnswers[answer.question_id._id].answers.push({
+          answer: answer.answer,
+          score: answer.score,
+          judge: {
+            _id: answer.judge_id._id,
+            name: answer.judge_id.name,
+            image: answer.judge_id.image,
+          },
+          startTime: answer.startTime,
+          endTime: answer.endTime,
+        });
+
+        groupedAnswers[answer.question_id._id].totalScore += answer.score || 0; 
+      }
+    });
 
     res.status(200).json({
       success: true,
       result: result,
-      answers:answers,
+      totalScore: totalScore,
+      questions: Object.values(groupedAnswers), 
       msg: "Result details successfully retrieved",
     });
   }
 );
+
+
