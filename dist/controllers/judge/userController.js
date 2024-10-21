@@ -45,6 +45,14 @@ const getUsers = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
             ],
         };
         const participants = yield participant_1.default.find(query).skip(skip).limit(limit);
+        const participantsWithParticipationStatus = yield Promise.all(participants.map((participant) => __awaiter(void 0, void 0, void 0, function* () {
+            const existingResult = yield result_1.default.findOne({
+                zone: zone,
+                participant_id: participant._id,
+                isCompleted: true,
+            });
+            return Object.assign(Object.assign({}, participant === null || participant === void 0 ? void 0 : participant._doc), { hasParticipated: !!existingResult });
+        })));
         const total = yield participant_1.default.countDocuments(query);
         return res.status(200).json({
             message: 'Participants fetched successfully',
@@ -52,7 +60,7 @@ const getUsers = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
             pageSize: limit,
             totalPages: Math.ceil(total / limit),
             totalItems: total,
-            participants,
+            participants: participantsWithParticipationStatus,
             success: true,
         });
     }
@@ -124,8 +132,8 @@ const proceedToQuestion = (req, res, next) => __awaiter(void 0, void 0, void 0, 
         }
         else {
             const randomBundle = yield bundle_1.default.aggregate([
-                { $match: { isDeleted: false } }, // Filter out deleted bundles
-                { $sample: { size: 1 } }, // Sample one random bundle
+                { $match: { isDeleted: false, questions: { $exists: true, $ne: [] } } },
+                { $sample: { size: 1 } },
             ]);
             const bundle_id = randomBundle.length > 0 ? randomBundle[0]._id : null;
             const firstQuestion = randomBundle.length > 0 ? (_b = randomBundle[0]) === null || _b === void 0 ? void 0 : _b.questions[0] : null;

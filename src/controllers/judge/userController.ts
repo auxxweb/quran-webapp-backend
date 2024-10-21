@@ -40,7 +40,20 @@ export const getUsers = async (
     }
 
     const participants = await Participant.find(query).skip(skip).limit(limit)
-
+    const participantsWithParticipationStatus = await Promise.all(
+      participants.map(async (participant:any) => {
+        const existingResult = await Result.findOne({
+          zone: zone,  
+          participant_id: participant._id,
+          isCompleted: true, 
+        });
+    
+        return {
+          ...participant?._doc,
+          hasParticipated: !!existingResult, 
+        };
+      })
+    );
     const total = await Participant.countDocuments(query)
 
     return res.status(200).json({
@@ -49,7 +62,7 @@ export const getUsers = async (
       pageSize: limit,
       totalPages: Math.ceil(total / limit),
       totalItems: total,
-      participants,
+      participants:participantsWithParticipationStatus,
       success: true,
     })
   } catch (error) {
