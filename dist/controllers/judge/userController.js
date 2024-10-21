@@ -106,66 +106,11 @@ const proceedToQuestion = (req, res, next) => __awaiter(void 0, void 0, void 0, 
             participant_id,
             zone: req.judge.zone,
         });
-        const aggregationResult = yield result_1.default.aggregate([
-            {
-                $match: { participant_id: new mongoose_1.default.Types.ObjectId(participant_id) },
-            },
-            {
-                $lookup: {
-                    from: "bundles",
-                    localField: "bundle_id",
-                    foreignField: "_id",
-                    as: "bundle",
-                },
-            },
-            {
-                $unwind: {
-                    path: "$bundle",
-                    preserveNullAndEmptyArrays: true,
-                },
-            },
-            {
-                $lookup: {
-                    from: "answers",
-                    localField: "_id",
-                    foreignField: "result_id",
-                    as: "answeredQuestions",
-                },
-            },
-            {
-                $unwind: "$answeredQuestions",
-            },
-            {
-                $group: {
-                    _id: "$_id",
-                    uniqueAnsweredQuestions: {
-                        $addToSet: "$answeredQuestions.question_id", // Set of unique answered question IDs
-                    },
-                    questionCount: { $first: { $size: "$bundle.questions" } }, // Total questions in the bundle
-                },
-            },
-            {
-                $addFields: {
-                    answeredCount: { $size: "$uniqueAnsweredQuestions" }, // Count of unique answered questions
-                },
-            },
-            {
-                $project: {
-                    _id: 1,
-                    bundle_id: 1,
-                    questionCount: 1,
-                    answeredCount: 1,
-                },
-            },
-        ]);
-        if (aggregationResult.length > 0) {
-            const { questionCount, answeredCount, _id } = aggregationResult[0];
-            if (answeredCount < questionCount) {
+        if (result) {
+            if ((result === null || result === void 0 ? void 0 : result.isCompleted) === false) {
                 return res.status(200).json({
-                    questionCount,
-                    answeredCount,
                     questionId: result === null || result === void 0 ? void 0 : result.currentQuestion,
-                    _id: _id,
+                    _id: result === null || result === void 0 ? void 0 : result._id,
                     message: "Participant has not completed all questions in the bundle.",
                     success: true,
                 });

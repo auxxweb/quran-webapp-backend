@@ -47,7 +47,6 @@ export const adminLogin = asyncHandler(async (req: Request, res: Response) => {
 export const forgetPassword = asyncHandler(
   async (req: Request, res: Response) => {
     const { email } = req.body;
-console.log(req.body,"req.body");
 
     if (!email) {
       res.status(400);

@@ -112,68 +112,12 @@ export const proceedToQuestion = async (
       participant_id,
       zone: req.judge.zone,
     });
-    const aggregationResult = await Result.aggregate([
-      {
-        $match: { participant_id: new mongoose.Types.ObjectId(participant_id) },
-      },
-      {
-        $lookup: {
-          from: "bundles",
-          localField: "bundle_id",
-          foreignField: "_id",
-          as: "bundle",
-        },
-      },
-      {
-        $unwind: {
-          path: "$bundle",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: "answers",
-          localField: "_id",
-          foreignField: "result_id",
-          as: "answeredQuestions",
-        },
-      },
-      {
-        $unwind: "$answeredQuestions",
-      },
-      {
-        $group: {
-          _id: "$_id",
-          uniqueAnsweredQuestions: {
-            $addToSet: "$answeredQuestions.question_id", // Set of unique answered question IDs
-          },
-          questionCount: { $first: { $size: "$bundle.questions" } }, // Total questions in the bundle
-        },
-      },
-      {
-        $addFields: {
-          answeredCount: { $size: "$uniqueAnsweredQuestions" }, // Count of unique answered questions
-        },
-      },
-      {
-        $project: {
-          _id: 1,
-          bundle_id: 1,
-          questionCount: 1,
-          answeredCount: 1,
-        },
-      },
-    ]);
 
-    if (aggregationResult.length > 0) {
-      const { questionCount, answeredCount, _id } = aggregationResult[0];
-
-      if (answeredCount < questionCount) {
+    if (result) {
+      if (result?.isCompleted === false) {
         return res.status(200).json({
-          questionCount,
-          answeredCount,
           questionId: result?.currentQuestion,
-          _id: _id,
+          _id: result?._id,
           message: "Participant has not completed all questions in the bundle.",
           success: true,
         });
@@ -498,4 +442,3 @@ export const getParticipantQuestions = async (
     next(error);
   }
 };
-

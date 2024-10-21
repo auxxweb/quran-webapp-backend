@@ -55,7 +55,6 @@ exports.adminLogin = (0, express_async_handler_1.default)((req, res) => __awaite
 // POST ||  forget Password
 exports.forgetPassword = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email } = req.body;
-    console.log(req.body, "req.body");
     if (!email) {
         res.status(400);
         throw new Error("Email is required");
