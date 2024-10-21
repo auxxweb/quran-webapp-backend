@@ -229,9 +229,9 @@ const proceedToNextQuestion = (req, res, next) => __awaiter(void 0, void 0, void
 });
 exports.proceedToNextQuestion = proceedToNextQuestion;
 const answersSubmit = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _c;
+    var _a;
     try {
-        const answers_dto = (0, class_transformer_1.plainToClass)(answers_2.AnswersDto, (_c = req.body) !== null && _c !== void 0 ? _c : {});
+        const answers_dto = (0, class_transformer_1.plainToClass)(answers_2.AnswersDto, (_a = req.body) !== null && _a !== void 0 ? _a : {});
         const error_messages = yield (0, class_validator_1.validate)(answers_dto);
         if (error_messages && error_messages.length > 0) {
             const error = yield (0, handleValidationErrors_1.handleValidationErrors)(res, error_messages);
