@@ -4,6 +4,7 @@ import Result from "../../models/result";
 import Answer from "../../models/answers";
 
 // GET || get Result details
+
 export const getResultsDetails = asyncHandler(
   async (req: Request, res: Response) => {
     const page = parseInt(req.query.page as string) || 1;
@@ -13,31 +14,65 @@ export const getResultsDetails = asyncHandler(
     const searchData = (req.query.search as string) || "";
     const zones = (req.query.zones as any) || "";
 
-    const query: any = { isDeleted: false,isCompleted:true };
-    if (searchData !== "") {
-      query.participant_id.name = { $regex: new RegExp(`^${searchData}.*`, "i") };
-    }
+    const query: any = { isDeleted: false, isCompleted: true };
+
     if (zones !== "") {
       query.zone = { $in: zones };
     }
 
+    const participantMatch:any = {};
+    if (searchData !== "") {
+      participantMatch["name"] = { $regex: new RegExp(`^${searchData}.*`, "i") };
+    }
+
     const results = await Result.find(query)
-      .populate("zone",'_id name ')
-      .populate("participant_id","name image")
+      .populate({
+        path: "participant_id",
+        select: "name image",
+        match: participantMatch, 
+      })
+      .populate("zone", "_id name")
       .sort({ [sortBy]: sortOrder })
       .skip((page - 1) * limit)
       .limit(limit);
+
+    const filteredResults = results.filter((result: any) => result.participant_id !== null);
+
+    const resultIds = filteredResults.map((result: any) => result._id);
+
+    const totalScores = await Answer.aggregate([
+      { $match: { result_id: { $in: resultIds }, isCompleted: true } },
+      {
+        $group: {
+          _id: "$result_id",
+          totalScore: { $sum: "$score" },
+        },
+      },
+    ]);
+
+    const resultsWithTotalScores = filteredResults.map((result: any) => {
+      const totalScore = totalScores.find(
+        (score: any) => String(score._id) === String(result._id)
+      );
+      return {
+        ...result.toObject(),
+        totalScore: totalScore ? totalScore.totalScore : 0,
+      };
+    });
+
     const totalDocuments = await Result.countDocuments(query);
 
     res.status(200).json({
       success: true,
-      results: results || [],
+      results: resultsWithTotalScores || [],
       currentPage: page,
       totalPages: Math.ceil(totalDocuments / limit),
       msg: "Result details successfully retrieved",
     });
   }
 );
+
+
 
 // GET || get single Result details
 export const getSingleResultsDetails = asyncHandler(
