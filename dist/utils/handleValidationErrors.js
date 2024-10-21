@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handleValidationErrors = void 0;
+exports.handleValidationErrors = handleValidationErrors;
 function handleValidationErrors(res, errorMessages) {
     return __awaiter(this, void 0, void 0, function* () {
         const simplifiedErrors = {};
@@ -23,4 +23,3 @@ function handleValidationErrors(res, errorMessages) {
         return simplifiedErrors;
     });
 }
-exports.handleValidationErrors = handleValidationErrors;
