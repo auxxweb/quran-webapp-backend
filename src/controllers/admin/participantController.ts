@@ -15,8 +15,7 @@ export const uploadParticipantDetails = asyncHandler(
       !address ||
       !gender ||
       !zone ||
-      !age ||
-      !imageUrl
+      !age 
     ) {
       res.status(400);
       throw new Error("Please enter all the fields");
@@ -33,7 +32,7 @@ export const uploadParticipantDetails = asyncHandler(
 
     const participant = await Participant.create({
       ...req.body,
-      image: imageUrl,
+      image: imageUrl&&imageUrl,
     });
     if (!participant) {
       res.status(400);

@@ -8,9 +8,7 @@ import Zone from "../../models/zones";
 export const uploadZoneDetails = asyncHandler(
   async (req: Request, res: Response) => {
     const { name, description } = req.body;
-    const { image }: any = req.files || {};
-    const imageUrl = image && image[0]?.location;
-    if (!name || !description || !imageUrl) {
+    if (!name || !description ) {
       res.status(400);
       throw new Error("Please enter all the fields");
     }
@@ -26,7 +24,7 @@ export const uploadZoneDetails = asyncHandler(
     }
     let tx_uuid = uniqid();
     store.set("uuid", { tx: tx_uuid });
-    const zone = await Zone.create({ ...req.body,image:imageUrl, url: `/${tx_uuid}` });
+    const zone = await Zone.create({ ...req.body, url: `${tx_uuid}` });
     if (!zone) {
       res.status(400);
       throw new Error("Zone upload failed");
@@ -43,8 +41,7 @@ export const uploadZoneDetails = asyncHandler(
 export const updateZoneDetails = asyncHandler(
   async (req: Request, res: Response) => {
     const { zoneId, name } = req.body;
-    const { image }: any = req.files || {};
-    const imageUrl = image && image[0]?.location;
+
     if (!zoneId) {
       res.status(400);
       throw new Error("Zone Id  not found");
@@ -76,7 +73,7 @@ export const updateZoneDetails = asyncHandler(
 
     const updatedZone = await Zone.findOneAndUpdate(
       { _id: zoneId, isDeleted: false },
-      {...req.body, image: imageUrl && imageUrl},
+      {...req.body},
       { new: true }
     );
     if (!updatedZone) {

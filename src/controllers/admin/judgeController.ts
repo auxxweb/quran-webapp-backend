@@ -14,8 +14,7 @@ export const uploadJudgeDetails = asyncHandler(
       !phone ||
       !address ||
       !gender ||
-      !zone ||
-      !imageUrl
+      !zone 
     ) {
       res.status(400);
       throw new Error("Please enter all the fields");
@@ -44,7 +43,7 @@ export const uploadJudgeDetails = asyncHandler(
     const judge = await Judge.create({
       ...req.body,
       password: plainPassword,
-      image: imageUrl,
+      image: imageUrl&&imageUrl,
     });
     if (!judge) {
       res.status(400);

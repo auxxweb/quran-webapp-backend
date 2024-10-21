@@ -20,7 +20,6 @@ const zoneSchema = new mongoose.Schema<Zone>(
     },
     image: {
       type: String,
-      required: true,
     },
     url: {
       type: String,

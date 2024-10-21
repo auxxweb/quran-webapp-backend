@@ -27,8 +27,7 @@ exports.uploadParticipantDetails = (0, express_async_handler_1.default)((req, re
         !address ||
         !gender ||
         !zone ||
-        !age ||
-        !imageUrl) {
+        !age) {
         res.status(400);
         throw new Error("Please enter all the fields");
     }
@@ -40,7 +39,7 @@ exports.uploadParticipantDetails = (0, express_async_handler_1.default)((req, re
         res.status(400);
         throw new Error(`${email} Participant already exists`);
     }
-    const participant = yield participant_1.default.create(Object.assign(Object.assign({}, req.body), { image: imageUrl }));
+    const participant = yield participant_1.default.create(Object.assign(Object.assign({}, req.body), { image: imageUrl && imageUrl }));
     if (!participant) {
         res.status(400);
         throw new Error("Participant upload failed");
@@ -52,10 +51,10 @@ exports.uploadParticipantDetails = (0, express_async_handler_1.default)((req, re
 }));
 // PATCH || update Participant details
 exports.updateParticipantDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+    var _b;
     const { participantId, email } = req.body;
     const { image } = req.files || {};
-    const imageUrl = image && ((_a = image[0]) === null || _a === void 0 ? void 0 : _a.location);
+    const imageUrl = image && ((_b = image[0]) === null || _b === void 0 ? void 0 : _b.location);
     if (!participantId) {
         res.status(400);
         throw new Error("Participant Id  not found");
