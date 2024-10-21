@@ -9,4 +9,5 @@ router.post("/proceed-to-question", userController_1.proceedToQuestion);
 router.post("/proceed-to-next-question", userController_1.proceedToNextQuestion);
 router.post("/submit-answers", userController_1.answersSubmit);
 router.get("/questions/:result_id", userController_1.getParticipantQuestions);
+router.get("/questions/zone/:zone_id", userController_1.getParticipantQuestionsByZone);
 exports.default = router;

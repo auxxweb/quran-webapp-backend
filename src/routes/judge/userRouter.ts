@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { answersSubmit, getParticipantQuestions,proceedToNextQuestion, getUser, getUsers, proceedToQuestion } from "../../controllers/judge/userController";
+import { answersSubmit, getParticipantQuestions,proceedToNextQuestion, getUser, getUsers, proceedToQuestion, getParticipantQuestionsByZone } from "../../controllers/judge/userController";
 
 const router: Router = Router();
 
@@ -15,5 +15,6 @@ router.post("/proceed-to-next-question", proceedToNextQuestion);
 router.post("/submit-answers", answersSubmit);
 
 router.get("/questions/:result_id", getParticipantQuestions);
+router.get("/questions/zone/:zone_id", getParticipantQuestionsByZone);
 
 export default router;
