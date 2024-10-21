@@ -14,7 +14,7 @@ export const adminProtect = asyncHandler(async (req: Request, res: Response, nex
     try {
       token = req.headers.authorization.split(" ")[1];
       const decoded = jwt.verify(token, secret) as JwtPayload;
-      req.admin = await Admin.findOne({ _id: decoded.id, isDeleted: false }).select("-password");
+      req.admin = await Admin.findOne({ _id: decoded.id, isDeleted: false })
       next();
     } catch (error) {
       res.status(401);

@@ -21,13 +21,14 @@ const judge_1 = __importDefault(require("../../models/judge"));
 const zones_1 = __importDefault(require("../../models/zones"));
 // PATCH ||  update admin password details
 exports.updatePassword = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     const { oldPassword, password } = req.body;
     const admin = req.admin;
     if (!admin) {
         res.status(400);
         throw new Error("admin not found");
     }
-    const isMatch = yield bcryptjs_1.default.compare(oldPassword, admin.password);
+    const isMatch = yield bcryptjs_1.default.compare(oldPassword, (_a = admin === null || admin === void 0 ? void 0 : admin.password) !== null && _a !== void 0 ? _a : "");
     if (!isMatch) {
         res.status(400);
         throw new Error("Incorrect Password!");

@@ -11,12 +11,13 @@ import Zone from "../../models/zones";
 export const updatePassword = asyncHandler(
   async (req: Request, res: Response) => {
     const { oldPassword, password } = req.body;
+  
     const admin = req.admin;
     if (!admin) {
       res.status(400);
       throw new Error("admin not found");
     }
-    const isMatch = await bcrypt.compare(oldPassword, admin.password);
+    const isMatch = await bcrypt.compare(oldPassword, admin?.password ??"");
 
     if (!isMatch) {
       res.status(400);
@@ -35,7 +36,6 @@ export const updatePassword = asyncHandler(
       res.status(400);
       throw new Error("Password updation failed");
     }
-
     res.status(200).json({
       success: true,
       msg: `admin's password successfully updated`,
