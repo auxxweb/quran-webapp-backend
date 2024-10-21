@@ -130,12 +130,12 @@ export const proceedToQuestion = async (
       }
     } else {
       const randomBundle = await Bundle.aggregate([
-        { $match: { isDeleted: false } }, // Filter out deleted bundles
-        { $sample: { size: 1 } }, // Sample one random bundle
-      ])
-      const bundle_id = randomBundle.length > 0 ? randomBundle[0]._id : null
-      const firstQuestion =
-        randomBundle.length > 0 ? randomBundle[0]?.questions[0] : null
+        { $match: { isDeleted: false, questions: { $exists: true, $ne: [] } } },
+        { $sample: { size: 1 } }, 
+      ]);
+      
+      const bundle_id = randomBundle.length > 0 ? randomBundle[0]._id : null;
+      const firstQuestion = randomBundle.length > 0 ? randomBundle[0]?.questions[0] : null;
       const bundle = await Bundle.findOne({ _id: bundle_id, isDeleted: false })
       if (!bundle) {
         return res.status(200).json({
