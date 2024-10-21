@@ -51,32 +51,37 @@ exports.getDashboardDetails = (0, express_async_handler_1.default)((req, res) =>
     const participants = yield participant_1.default.countDocuments({ isDeleted: false });
     const judges = yield judge_1.default.countDocuments({ isDeleted: false });
     const zones = yield zones_1.default.countDocuments({ isDeleted: false });
-    const zoneBasedParticipants = yield participant_1.default.aggregate([
+    const zoneBasedParticipants = yield zones_1.default.aggregate([
         {
             $match: { isDeleted: false },
         },
         {
-            $group: {
-                _id: "$zone",
-                count: { $sum: 1 },
-            },
-        },
-        {
             $lookup: {
-                from: "zones",
+                from: "participants",
                 localField: "_id",
-                foreignField: "_id",
-                as: "zoneDetails",
+                foreignField: "zone",
+                as: "participants",
             },
-        },
-        {
-            $unwind: "$zoneDetails",
         },
         {
             $project: {
-                _id: 0,
-                id: "$zoneDetails._id",
-                label: "$zoneDetails.name",
+                _id: 1,
+                name: 1,
+                count: {
+                    $size: {
+                        $filter: {
+                            input: "$participants",
+                            as: "participant",
+                            cond: { $eq: ["$$participant.isDeleted", false] },
+                        },
+                    },
+                },
+            },
+        },
+        {
+            $project: {
+                id: "$_id",
+                label: "$name",
                 count: 1,
             },
         },
