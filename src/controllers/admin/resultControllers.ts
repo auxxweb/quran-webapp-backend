@@ -85,13 +85,12 @@ export const getSingleResultsDetails = asyncHandler(
       throw new Error("resultId is required");
     }
 
-    // Fetch the result
     const result = await Result.findOne({
       _id: resultId,
       isDeleted: false,
       isCompleted: true,
     })
-      .populate("zone", "_id name ")
+      .populate("zone", "_id name")
       .populate("participant_id", "_id name image email phone address");
 
     if (!result) {
@@ -99,65 +98,72 @@ export const getSingleResultsDetails = asyncHandler(
       throw new Error("Result not found");
     }
 
-    // Fetch the answers for the given result
     const answers = await Answer.find({
       result_id: resultId,
       isCompleted: true,
     })
-      .populate("question_id", "_id name ")
+      .populate("question_id", "_id question answer")
       .populate("judge_id", "_id name image isMain");
 
     const groupedAnswers: any = {};
-    let totalScore = 0;
+    let totalScore = 0; 
+    answers?.forEach((answer: any) => {
+      const questionId = answer?.question_id?._id;
 
-    answers.forEach((answer:any) => {
-      if (answer.judge_id.isMain) {
-        if (!groupedAnswers[answer.question_id._id]) {
-          groupedAnswers[answer.question_id._id] = {
-            question_id: answer.question_id._id,
-            question_name: answer.question_id.name,
-            startTime: answer.startTime,
-            endTime: answer.endTime,
-            totalScore: 0, 
-            answers: [], 
+      if (answer?.judge_id?.isMain) {
+        if (!groupedAnswers[questionId]) {
+          groupedAnswers[questionId] = {
+            question_id: questionId,
+            question: answer.question_id?.question,
+            answer: answer.question_id?.answer,
+            startTime: answer?.startTime, 
+            endTime: answer?.endTime,     
+            totalScore: 0,               
+            answers: [],               
           };
+        } else {
+          groupedAnswers[questionId].startTime = answer?.startTime;
+          groupedAnswers[questionId].endTime = answer?.endTime;
         }
       } else {
-        if (!groupedAnswers[answer.question_id._id]) {
-          groupedAnswers[answer.question_id._id] = {
-            question_id: answer.question_id._id,
-            question_name: answer.question_id.name,
+        if (!groupedAnswers[questionId]) {
+          groupedAnswers[questionId] = {
+            question_id: questionId,
+            question: answer?.question_id?.question,
+            answer: answer?.question_id?.answer,
             startTime: null, 
-            endTime: null, 
-            totalScore: 0, 
-            answers: [],
+            endTime: null,   
+            totalScore: 0,   
+            answers: [],    
           };
         }
 
-        groupedAnswers[answer.question_id._id].answers.push({
-          answer: answer.answer,
-          score: answer.score,
+        groupedAnswers[questionId]?.answers?.push({
+          answer: answer?.answer,
+          score: answer?.score,
           judge: {
-            _id: answer.judge_id._id,
-            name: answer.judge_id.name,
-            image: answer.judge_id.image,
+            _id: answer?.judge_id?._id,
+            name: answer?.judge_id?.name,
+            image: answer?.judge_id?.image,
           },
-          startTime: answer.startTime,
-          endTime: answer.endTime,
+          startTime: answer?.startTime,
+          endTime: answer?.endTime,
         });
 
-        groupedAnswers[answer.question_id._id].totalScore += answer.score || 0; 
+        groupedAnswers[questionId].totalScore += answer?.score || 0;
+        totalScore += answer?.score || 0;
       }
     });
 
     res.status(200).json({
       success: true,
       result: result,
-      totalScore: totalScore,
+      totalScore: totalScore, 
       questions: Object.values(groupedAnswers), 
       msg: "Result details successfully retrieved",
     });
   }
 );
+
 
 

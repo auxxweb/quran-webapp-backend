@@ -75,63 +75,70 @@ exports.getSingleResultsDetails = (0, express_async_handler_1.default)((req, res
         res.status(400);
         throw new Error("resultId is required");
     }
-    // Fetch the result
     const result = yield result_1.default.findOne({
         _id: resultId,
         isDeleted: false,
         isCompleted: true,
     })
-        .populate("zone", "_id name ")
+        .populate("zone", "_id name")
         .populate("participant_id", "_id name image email phone address");
     if (!result) {
         res.status(400);
         throw new Error("Result not found");
     }
-    // Fetch the answers for the given result
     const answers = yield answers_1.default.find({
         result_id: resultId,
         isCompleted: true,
     })
-        .populate("question_id", "_id name ")
+        .populate("question_id", "_id question answer")
         .populate("judge_id", "_id name image isMain");
     const groupedAnswers = {};
     let totalScore = 0;
-    answers.forEach((answer) => {
-        if (answer.judge_id.isMain) {
-            if (!groupedAnswers[answer.question_id._id]) {
-                groupedAnswers[answer.question_id._id] = {
-                    question_id: answer.question_id._id,
-                    question_name: answer.question_id.name,
-                    startTime: answer.startTime,
-                    endTime: answer.endTime,
+    answers === null || answers === void 0 ? void 0 : answers.forEach((answer) => {
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
+        const questionId = (_a = answer === null || answer === void 0 ? void 0 : answer.question_id) === null || _a === void 0 ? void 0 : _a._id;
+        if ((_b = answer === null || answer === void 0 ? void 0 : answer.judge_id) === null || _b === void 0 ? void 0 : _b.isMain) {
+            if (!groupedAnswers[questionId]) {
+                groupedAnswers[questionId] = {
+                    question_id: questionId,
+                    question: (_c = answer.question_id) === null || _c === void 0 ? void 0 : _c.question,
+                    answer: (_d = answer.question_id) === null || _d === void 0 ? void 0 : _d.answer,
+                    startTime: answer === null || answer === void 0 ? void 0 : answer.startTime,
+                    endTime: answer === null || answer === void 0 ? void 0 : answer.endTime,
                     totalScore: 0,
                     answers: [],
                 };
             }
+            else {
+                groupedAnswers[questionId].startTime = answer === null || answer === void 0 ? void 0 : answer.startTime;
+                groupedAnswers[questionId].endTime = answer === null || answer === void 0 ? void 0 : answer.endTime;
+            }
         }
         else {
-            if (!groupedAnswers[answer.question_id._id]) {
-                groupedAnswers[answer.question_id._id] = {
-                    question_id: answer.question_id._id,
-                    question_name: answer.question_id.name,
+            if (!groupedAnswers[questionId]) {
+                groupedAnswers[questionId] = {
+                    question_id: questionId,
+                    question: (_e = answer === null || answer === void 0 ? void 0 : answer.question_id) === null || _e === void 0 ? void 0 : _e.question,
+                    answer: (_f = answer === null || answer === void 0 ? void 0 : answer.question_id) === null || _f === void 0 ? void 0 : _f.answer,
                     startTime: null,
                     endTime: null,
                     totalScore: 0,
                     answers: [],
                 };
             }
-            groupedAnswers[answer.question_id._id].answers.push({
-                answer: answer.answer,
-                score: answer.score,
+            (_h = (_g = groupedAnswers[questionId]) === null || _g === void 0 ? void 0 : _g.answers) === null || _h === void 0 ? void 0 : _h.push({
+                answer: answer === null || answer === void 0 ? void 0 : answer.answer,
+                score: answer === null || answer === void 0 ? void 0 : answer.score,
                 judge: {
-                    _id: answer.judge_id._id,
-                    name: answer.judge_id.name,
-                    image: answer.judge_id.image,
+                    _id: (_j = answer === null || answer === void 0 ? void 0 : answer.judge_id) === null || _j === void 0 ? void 0 : _j._id,
+                    name: (_k = answer === null || answer === void 0 ? void 0 : answer.judge_id) === null || _k === void 0 ? void 0 : _k.name,
+                    image: (_l = answer === null || answer === void 0 ? void 0 : answer.judge_id) === null || _l === void 0 ? void 0 : _l.image,
                 },
-                startTime: answer.startTime,
-                endTime: answer.endTime,
+                startTime: answer === null || answer === void 0 ? void 0 : answer.startTime,
+                endTime: answer === null || answer === void 0 ? void 0 : answer.endTime,
             });
-            groupedAnswers[answer.question_id._id].totalScore += answer.score || 0;
+            groupedAnswers[questionId].totalScore += (answer === null || answer === void 0 ? void 0 : answer.score) || 0;
+            totalScore += (answer === null || answer === void 0 ? void 0 : answer.score) || 0;
         }
     });
     res.status(200).json({

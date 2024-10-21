@@ -49,10 +49,10 @@ exports.uploadZoneDetails = (0, express_async_handler_1.default)((req, res) => _
 }));
 // PATCH || update Zone details
 exports.updateZoneDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+    var _b;
     const { zoneId, name } = req.body;
     const { image } = req.files || {};
-    const imageUrl = image && ((_a = image[0]) === null || _a === void 0 ? void 0 : _a.location);
+    const imageUrl = image && ((_b = image[0]) === null || _b === void 0 ? void 0 : _b.location);
     if (!zoneId) {
         res.status(400);
         throw new Error("Zone Id  not found");
