@@ -31,7 +31,7 @@ const getUsers = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
         const limit = parseInt(pageSize) || 10;
         const skip = (page - 1) * limit;
         const zone = req.judge.zone;
-        const searchRegex = new RegExp(search, "i");
+        const searchRegex = new RegExp(search, 'i');
         const query = {
             $and: [
                 { zone },
@@ -55,7 +55,7 @@ const getUsers = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
         })));
         const total = yield participant_1.default.countDocuments(query);
         return res.status(200).json({
-            message: "Participants fetched successfully",
+            message: 'Participants fetched successfully',
             currentPage: page,
             pageSize: limit,
             totalPages: Math.ceil(total / limit),
@@ -74,12 +74,12 @@ const getUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
         const participant = yield participant_1.default.findOne({ _id: req.params.id });
         if (!participant) {
             return res.status(404).json({
-                message: "participant not found",
+                message: 'participant not found',
                 success: false,
             });
         }
         return res.status(200).json({
-            message: "participant fetched successfully",
+            message: 'participant fetched successfully',
             participant: participant,
             success: true,
         });
@@ -102,12 +102,12 @@ const proceedToQuestion = (req, res, next) => __awaiter(void 0, void 0, void 0, 
         const participant = yield participant_1.default.findOne({ _id: participant_id });
         if (participant == null) {
             return res.status(400).json({
-                message: "participant not found.",
+                message: 'participant not found.',
             });
         }
         if (participant.zone.toString() != req.judge.zone.toString()) {
             return res.status(400).json({
-                message: "participant and judge zone not same.",
+                message: 'participant and judge zone not same.',
             });
         }
         const result = yield result_1.default.findOne({
@@ -119,13 +119,13 @@ const proceedToQuestion = (req, res, next) => __awaiter(void 0, void 0, void 0, 
                 return res.status(200).json({
                     questionId: result === null || result === void 0 ? void 0 : result.currentQuestion,
                     _id: result === null || result === void 0 ? void 0 : result._id,
-                    message: "Participant has not completed all questions in the bundle.",
+                    message: 'Participant has not completed all questions in the bundle.',
                     success: true,
                 });
             }
             else {
                 return res.status(200).json({
-                    message: "Participant has already completed all questions in the bundle.",
+                    message: 'Participant has already completed all questions in the bundle.',
                     success: false,
                 });
             }
@@ -140,7 +140,7 @@ const proceedToQuestion = (req, res, next) => __awaiter(void 0, void 0, void 0, 
             const bundle = yield bundle_1.default.findOne({ _id: bundle_id, isDeleted: false });
             if (!bundle) {
                 return res.status(200).json({
-                    message: "Bundle not found",
+                    message: 'Bundle not found',
                     success: false,
                 });
             }
@@ -170,7 +170,7 @@ const proceedToQuestion = (req, res, next) => __awaiter(void 0, void 0, void 0, 
             }));
             yield Promise.all(answersPromises);
             return res.status(200).json({
-                message: "Result saved successfully",
+                message: 'Result saved successfully',
                 result: result,
                 questionId: firstQuestion,
                 success: true,
@@ -188,7 +188,7 @@ const proceedToNextQuestion = (req, res, next) => __awaiter(void 0, void 0, void
         const { question_id, old_question_id, result_id, startTime, answer_id, isLastSubmit, } = req.body;
         if (!result_id || !startTime) {
             return res.status(400).json({
-                message: "required field not provided",
+                message: 'required field not provided',
                 success: false,
             });
         }
@@ -196,12 +196,12 @@ const proceedToNextQuestion = (req, res, next) => __awaiter(void 0, void 0, void
             result_id,
             question_id: old_question_id,
             isCompleted: false,
-        }, { judge_id: 1 }).populate("judge_id", "isMain");
+        }, { judge_id: 1 }).populate('judge_id', 'isMain');
         if (answers) {
             const notSubmitted = answers === null || answers === void 0 ? void 0 : answers.find((answer) => { var _a; return ((_a = answer === null || answer === void 0 ? void 0 : answer.judge_id) === null || _a === void 0 ? void 0 : _a.isMain) === false; });
             if (notSubmitted) {
                 return res.status(200).json({
-                    message: "All judges not submitted answer and score",
+                    message: 'All judges not submitted answer and score',
                     success: false,
                 });
             }
@@ -214,7 +214,7 @@ const proceedToNextQuestion = (req, res, next) => __awaiter(void 0, void 0, void
         });
         if (answerData) {
             return res.status(400).json({
-                message: "Answer already submitted",
+                message: 'Answer already submitted',
                 success: false,
             });
         }
@@ -246,7 +246,7 @@ const proceedToNextQuestion = (req, res, next) => __awaiter(void 0, void 0, void
             data = yield Promise.all(answersPromises);
         }
         return res.status(200).json({
-            message: "Result saved successfully",
+            message: 'Result saved successfully',
             result: data,
             success: true,
         });
@@ -266,7 +266,7 @@ const answersSubmit = (req, res, next) => __awaiter(void 0, void 0, void 0, func
             throw res.status(404).json({ error });
         }
         const judge = req.judge;
-        const { question_id, result_id, answer_id, endTime, answer, score } = req.body;
+        const { question_id, result_id, answer_id, endTime, answer, score, } = req.body;
         const answerData = yield answers_1.default.findOne({
             result_id,
             question_id,
@@ -275,13 +275,13 @@ const answersSubmit = (req, res, next) => __awaiter(void 0, void 0, void 0, func
         });
         if (answerData) {
             return res.status(400).json({
-                message: "Answer already submitted",
+                message: 'Answer already submitted',
                 success: false,
             });
         }
         const data = yield answers_1.default.findOneAndUpdate({ _id: answer_id }, { endTime, score, answer, isCompleted: true }, { new: true });
         return res.status(200).json({
-            message: "Result saved successfully",
+            message: 'Result saved successfully',
             result: data,
             success: true,
         });
@@ -302,58 +302,58 @@ const getParticipantQuestions = (req, res, next) => __awaiter(void 0, void 0, vo
             },
             {
                 $lookup: {
-                    from: "bundles",
-                    localField: "bundle_id",
-                    foreignField: "_id",
-                    as: "bundle",
+                    from: 'bundles',
+                    localField: 'bundle_id',
+                    foreignField: '_id',
+                    as: 'bundle',
                 },
             },
             {
                 $unwind: {
-                    path: "$bundle",
+                    path: '$bundle',
                     preserveNullAndEmptyArrays: true,
                 },
             },
             {
                 $lookup: {
-                    from: "questions",
-                    localField: "bundle.questions",
-                    foreignField: "_id",
-                    as: "questions",
+                    from: 'questions',
+                    localField: 'bundle.questions',
+                    foreignField: '_id',
+                    as: 'questions',
                 },
             },
             {
                 $unwind: {
-                    path: "$questions",
+                    path: '$questions',
                     preserveNullAndEmptyArrays: true,
                 },
             },
             {
                 $lookup: {
-                    from: "answers",
-                    let: { result_id: "$_id", question_id: "$questions._id" },
+                    from: 'answers',
+                    let: { result_id: '$_id', question_id: '$questions._id' },
                     pipeline: [
                         {
                             $match: {
                                 $expr: {
                                     $and: [
-                                        { $eq: ["$result_id", "$$result_id"] },
-                                        { $eq: ["$question_id", "$$question_id"] },
+                                        { $eq: ['$result_id', '$$result_id'] },
+                                        { $eq: ['$question_id', '$$question_id'] },
                                     ],
                                 },
                             },
                         },
                         {
                             $lookup: {
-                                from: "judges",
-                                localField: "judge_id",
-                                foreignField: "_id",
-                                as: "judge",
+                                from: 'judges',
+                                localField: 'judge_id',
+                                foreignField: '_id',
+                                as: 'judge',
                             },
                         },
                         {
                             $unwind: {
-                                path: "$judge",
+                                path: '$judge',
                                 preserveNullAndEmptyArrays: true,
                             },
                         },
@@ -363,41 +363,41 @@ const getParticipantQuestions = (req, res, next) => __awaiter(void 0, void 0, vo
                                 score: 1,
                                 judge_id: 1,
                                 isCompleted: 1,
-                                isMain: "$judge.isMain", // Flatten isMain to be part of the submittedAnswers
+                                isMain: '$judge.isMain', // Flatten isMain to be part of the submittedAnswers
                             },
                         },
                     ],
-                    as: "submittedAnswers", // Keep all submitted answers as an array
+                    as: 'submittedAnswers', // Keep all submitted answers as an array
                 },
             },
             // Add a lookup for Participant to include name and zone
             {
                 $lookup: {
-                    from: "participants",
-                    localField: "participant_id",
-                    foreignField: "_id",
-                    as: "participant",
+                    from: 'participants',
+                    localField: 'participant_id',
+                    foreignField: '_id',
+                    as: 'participant',
                 },
             },
             {
                 $unwind: {
-                    path: "$participant",
+                    path: '$participant',
                     preserveNullAndEmptyArrays: true,
                 },
             },
             {
                 $group: {
-                    _id: "$_id",
-                    bundle_id: { $first: "$bundle_id" },
-                    participant_id: { $first: "$participant_id" },
-                    participant_name: { $first: "$participant.name" },
-                    participant_image: { $first: "$participant.image" },
+                    _id: '$_id',
+                    bundle_id: { $first: '$bundle_id' },
+                    participant_id: { $first: '$participant_id' },
+                    participant_name: { $first: '$participant.name' },
+                    participant_image: { $first: '$participant.image' },
                     questions: {
                         $push: {
-                            _id: "$questions._id",
-                            question: "$questions.question",
-                            answer: "$questions.answer",
-                            submittedAnswers: "$submittedAnswers", // Now an array of all answers with flattened isMain
+                            _id: '$questions._id',
+                            question: '$questions.question',
+                            answer: '$questions.answer',
+                            submittedAnswers: '$submittedAnswers', // Now an array of all answers with flattened isMain
                         },
                     },
                 },
@@ -415,12 +415,12 @@ const getParticipantQuestions = (req, res, next) => __awaiter(void 0, void 0, vo
         ]);
         if (result.length === 0) {
             return res.status(404).json({
-                message: "No results found for the participant.",
+                message: 'No results found for the participant.',
                 success: false,
             });
         }
         return res.status(200).json({
-            message: "Questions fetched successfully",
+            message: 'Questions fetched successfully',
             success: true,
             data: result[0],
         });
@@ -431,21 +431,51 @@ const getParticipantQuestions = (req, res, next) => __awaiter(void 0, void 0, vo
 });
 exports.getParticipantQuestions = getParticipantQuestions;
 const getParticipantQuestionsByZone = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     try {
         const { zone_id } = req.params;
-        console.log(zone_id, "zoneId");
+        // console.log(zone_id, 'zoneId', req.judge)
         const result = yield result_1.default.find({
             zone: new mongoose_1.default.Types.ObjectId(zone_id),
             isCompleted: false,
         });
+        const data = yield result_1.default.aggregate([
+            {
+                $match: {
+                    zone: new mongoose_1.default.Types.ObjectId(zone_id),
+                    isDeleted: false,
+                    isCompleted: false,
+                },
+            },
+            {
+                $lookup: {
+                    from: 'answers',
+                    let: { result_id: '$_id', judge_id: (_a = req === null || req === void 0 ? void 0 : req.judge) === null || _a === void 0 ? void 0 : _a._id },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $eq: ['$result_id', '$$result_id'] },
+                                        { $eq: ['$judge_id', '$$judge_id'] },
+                                        { $eq: ['$isCompleted', false] },
+                                    ],
+                                },
+                            },
+                        },
+                    ],
+                    as: 'answers',
+                },
+            },
+        ]);
         return res.status(200).json({
-            message: "Result fetched successfully",
+            message: 'Result fetched successfully',
             success: true,
-            data: result,
+            data: data,
         });
     }
     catch (error) {
-        console.log(error, "error");
+        console.log(error, 'error');
         next(error);
     }
 });

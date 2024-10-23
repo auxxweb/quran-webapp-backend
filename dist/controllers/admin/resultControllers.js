@@ -128,6 +128,7 @@ exports.getSingleResultsDetails = (0, express_async_handler_1.default)((req, res
             }
             (_h = (_g = groupedAnswers[questionId]) === null || _g === void 0 ? void 0 : _g.answers) === null || _h === void 0 ? void 0 : _h.push({
                 answer: answer === null || answer === void 0 ? void 0 : answer.answer,
+                _id: answer === null || answer === void 0 ? void 0 : answer._id,
                 score: answer === null || answer === void 0 ? void 0 : answer.score,
                 judge: {
                     _id: (_j = answer === null || answer === void 0 ? void 0 : answer.judge_id) === null || _j === void 0 ? void 0 : _j._id,

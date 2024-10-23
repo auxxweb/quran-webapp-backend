@@ -140,6 +140,7 @@ export const getSingleResultsDetails = asyncHandler(
 
         groupedAnswers[questionId]?.answers?.push({
           answer: answer?.answer,
+          _id:answer?._id,
           score: answer?.score,
           judge: {
             _id: answer?.judge_id?._id,
