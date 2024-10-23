@@ -106,7 +106,7 @@ export const getSingleResultsDetails = asyncHandler(
       .populate("judge_id", "_id name image isMain");
 
     const groupedAnswers: any = {};
-    let totalScore = 0; 
+    let totalScore = 0;
     answers?.forEach((answer: any) => {
       const questionId = answer?.question_id?._id;
 
@@ -116,10 +116,10 @@ export const getSingleResultsDetails = asyncHandler(
             question_id: questionId,
             question: answer.question_id?.question,
             answer: answer.question_id?.answer,
-            startTime: answer?.startTime, 
-            endTime: answer?.endTime,     
-            totalScore: 0,               
-            answers: [],               
+            startTime: answer?.startTime,
+            endTime: answer?.endTime,
+            totalScore: 0,
+            answers: [],
           };
         } else {
           groupedAnswers[questionId].startTime = answer?.startTime;
@@ -131,10 +131,10 @@ export const getSingleResultsDetails = asyncHandler(
             question_id: questionId,
             question: answer?.question_id?.question,
             answer: answer?.question_id?.answer,
-            startTime: null, 
-            endTime: null,   
-            totalScore: 0,   
-            answers: [],    
+            startTime: null,
+            endTime: null,
+            totalScore: 0,
+            answers: [],
           };
         }
 
@@ -158,12 +158,37 @@ export const getSingleResultsDetails = asyncHandler(
     res.status(200).json({
       success: true,
       result: result,
-      totalScore: totalScore, 
-      questions: Object.values(groupedAnswers), 
+      totalScore: totalScore,
+      questions: Object.values(groupedAnswers),
       msg: "Result details successfully retrieved",
     });
   }
 );
 
+// PATCH || update single score
 
+export const updateAnswer = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { answerId } = req.body;
 
+    if (!answerId) {
+      res.status(400);
+      throw new Error("Answer Id  not found");
+    }
+
+    const updatedAnswer = await Answer.findOneAndUpdate(
+      { _id: answerId, isDeleted: false },
+      req.body,
+      { new: true }
+    );
+    if (!updatedAnswer) {
+      res.status(400);
+      throw new Error("Answer not updated");
+    }
+
+    res.status(200).json({
+      success: true,
+      msg: "Answer details successfully updated",
+    });
+  }
+);

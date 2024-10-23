@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSingleResultsDetails = exports.getResultsDetails = void 0;
+exports.updateAnswer = exports.getSingleResultsDetails = exports.getResultsDetails = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const result_1 = __importDefault(require("../../models/result"));
 const answers_1 = __importDefault(require("../../models/answers"));
@@ -147,5 +147,22 @@ exports.getSingleResultsDetails = (0, express_async_handler_1.default)((req, res
         totalScore: totalScore,
         questions: Object.values(groupedAnswers),
         msg: "Result details successfully retrieved",
+    });
+}));
+// PATCH || update single score
+exports.updateAnswer = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { answerId } = req.body;
+    if (!answerId) {
+        res.status(400);
+        throw new Error("Answer Id  not found");
+    }
+    const updatedAnswer = yield answers_1.default.findOneAndUpdate({ _id: answerId, isDeleted: false }, req.body, { new: true });
+    if (!updatedAnswer) {
+        res.status(400);
+        throw new Error("Answer not updated");
+    }
+    res.status(200).json({
+        success: true,
+        msg: "Answer details successfully updated",
     });
 }));
