@@ -510,12 +510,6 @@ export const getParticipantQuestionsByZone = async (
 ) => {
   try {
     const { zone_id } = req.params
-    // console.log(zone_id, 'zoneId', req.judge)
-
-    const result = await Result.find({
-      zone: new mongoose.Types.ObjectId(zone_id),
-      isCompleted: false,
-    })
 
     const data = await Result.aggregate([
       {

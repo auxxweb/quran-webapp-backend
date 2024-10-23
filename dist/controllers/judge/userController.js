@@ -434,11 +434,6 @@ const getParticipantQuestionsByZone = (req, res, next) => __awaiter(void 0, void
     var _a;
     try {
         const { zone_id } = req.params;
-        // console.log(zone_id, 'zoneId', req.judge)
-        const result = yield result_1.default.find({
-            zone: new mongoose_1.default.Types.ObjectId(zone_id),
-            isCompleted: false,
-        });
         const data = yield result_1.default.aggregate([
             {
                 $match: {
