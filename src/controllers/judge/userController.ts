@@ -171,12 +171,19 @@ export const proceedToQuestion = async (
         { _id: 1 }
       );
       const answersPromises = judges.map(async (item: any) => {
-        const createdAnswer = await Answer.create({
-          question_id: firstQuestion,
+        const createdAnswer = await Answer.findOne({
           result_id: result?._id,
+          question_id: firstQuestion,
           judge_id: item._id,
-          startTime,
         });
+        if (!createdAnswer) {
+          await Answer.create({
+            question_id: firstQuestion,
+            result_id: result?._id,
+            judge_id: item._id,
+            startTime,
+          });
+        }
       });
       await Promise.all(answersPromises);
 
@@ -249,7 +256,7 @@ export const proceedToNextQuestion = async (
       });
     }
     if (judge?.isMain) {
-      const data = await Answer.findOneAndUpdate(
+      await Answer.findOneAndUpdate(
         { _id: answer_id },
         { endTime: startTime, isCompleted: true },
         { new: true }
@@ -257,7 +264,7 @@ export const proceedToNextQuestion = async (
     }
     let data;
     if (isLastSubmit) {
-      const resultData = await Result.findOneAndUpdate(
+      await Result.findOneAndUpdate(
         { _id: result_id },
         { endTime: startTime, isCompleted: true, currentQuestion: null },
         { new: true }
@@ -273,12 +280,19 @@ export const proceedToNextQuestion = async (
         { _id: 1 }
       );
       const answersPromises = judges.map(async (item: any) => {
-        const createdAnswer = await Answer.create({
-          question_id,
-          result_id,
+        const createdAnswer = await Answer.findOne({
+          result_id: result_id,
+          question_id: question_id,
           judge_id: item._id,
-          startTime,
         });
+        if (!createdAnswer) {
+          await Answer.create({
+            question_id,
+            result_id,
+            judge_id: item._id,
+            startTime,
+          });
+        }
       });
       data = await Promise.all(answersPromises);
     }
