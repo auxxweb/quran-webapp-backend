@@ -1,88 +1,89 @@
-import { Request, Response } from "express";
-import asyncHandler from "express-async-handler";
-import Result from "../../models/result";
-import Answer from "../../models/answers";
+import { Request, Response } from 'express'
+import asyncHandler from 'express-async-handler'
+import Result from '../../models/result'
+import Answer from '../../models/answers'
+import mongoose from 'mongoose'
 
 // GET || get Result details
 
 export const getResultsDetails = asyncHandler(
   async (req: Request, res: Response) => {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
-    const sortBy = (req.query.sortBy as string) || "createdAt";
-    const sortOrder = (req.query.sortOrder as string) === "asc" ? 1 : -1;
-    const searchData = (req.query.search as string) || "";
-    const zones = (req.query.zones as any) || "";
+    const page = parseInt(req.query.page as string) || 1
+    const limit = parseInt(req.query.limit as string) || 10
+    const sortBy = (req.query.sortBy as string) || 'createdAt'
+    const sortOrder = (req.query.sortOrder as string) === 'asc' ? 1 : -1
+    const searchData = (req.query.search as string) || ''
+    const zones = (req.query.zones as any) || ''
 
-    const query: any = { isDeleted: false, isCompleted: true };
+    const query: any = { isDeleted: false, isCompleted: true }
 
-    if (zones !== "") {
-      query.zone = { $in: zones };
+    if (zones !== '') {
+      query.zone = { $in: zones }
     }
 
-    const participantMatch: any = {};
-    if (searchData !== "") {
-      participantMatch["name"] = {
-        $regex: new RegExp(`^${searchData}.*`, "i"),
-      };
+    const participantMatch: any = {}
+    if (searchData !== '') {
+      participantMatch['name'] = {
+        $regex: new RegExp(`^${searchData}.*`, 'i'),
+      }
     }
 
     const results = await Result.find(query)
       .populate({
-        path: "participant_id",
-        select: "name image",
+        path: 'participant_id',
+        select: 'name image',
         match: participantMatch,
       })
-      .populate("zone", "_id name")
+      .populate('zone', '_id name')
       .sort({ [sortBy]: sortOrder })
       .skip((page - 1) * limit)
-      .limit(limit);
+      .limit(limit)
 
     const filteredResults = results.filter(
-      (result: any) => result.participant_id !== null
-    );
+      (result: any) => result.participant_id !== null,
+    )
 
-    const resultIds = filteredResults.map((result: any) => result._id);
+    const resultIds = filteredResults.map((result: any) => result._id)
 
     const totalScores = await Answer.aggregate([
       { $match: { result_id: { $in: resultIds }, isCompleted: true } },
       {
         $group: {
-          _id: "$result_id",
-          totalScore: { $sum: "$score" },
+          _id: '$result_id',
+          totalScore: { $sum: '$score' },
         },
       },
-    ]);
+    ])
 
     const resultsWithTotalScores = filteredResults.map((result: any) => {
       const totalScore = totalScores.find(
-        (score: any) => String(score._id) === String(result._id)
-      );
+        (score: any) => String(score._id) === String(result._id),
+      )
       return {
         ...result.toObject(),
         totalScore: totalScore ? totalScore.totalScore : 0,
-      };
-    });
+      }
+    })
 
-    const totalDocuments = await Result.countDocuments(query);
+    const totalDocuments = await Result.countDocuments(query)
 
     res.status(200).json({
       success: true,
       results: resultsWithTotalScores || [],
       currentPage: page,
       totalPages: Math.ceil(totalDocuments / limit),
-      msg: "Result details successfully retrieved",
-    });
-  }
-);
+      msg: 'Result details successfully retrieved',
+    })
+  },
+)
 
 // GET || get single Result details
 export const getSingleResultsDetails = asyncHandler(
   async (req: Request, res: Response) => {
-    const { resultId } = req.params;
+    const { resultId } = req.params
     if (!resultId) {
-      res.status(400);
-      throw new Error("resultId is required");
+      res.status(400)
+      throw new Error('resultId is required')
     }
 
     const result = await Result.findOne({
@@ -90,25 +91,25 @@ export const getSingleResultsDetails = asyncHandler(
       isDeleted: false,
       isCompleted: true,
     })
-      .populate("zone", "_id name")
-      .populate("participant_id", "_id name image email phone address");
+      .populate('zone', '_id name')
+      .populate('participant_id', '_id name image email phone address')
 
     if (!result) {
-      res.status(400);
-      throw new Error("Result not found");
+      res.status(400)
+      throw new Error('Result not found')
     }
 
     const answers = await Answer.find({
       result_id: resultId,
       isCompleted: true,
     })
-      .populate("question_id", "_id question answer")
-      .populate("judge_id", "_id name image isMain");
+      .populate('question_id', '_id question answer')
+      .populate('judge_id', '_id name image isMain')
 
-    const groupedAnswers: any = {};
-    let totalScore = 0;
+    const groupedAnswers: any = {}
+    let totalScore = 0
     answers?.forEach((answer: any) => {
-      const questionId = answer?.question_id?._id;
+      const questionId = answer?.question_id?._id
 
       if (answer?.judge_id?.isMain) {
         if (!groupedAnswers[questionId]) {
@@ -120,10 +121,10 @@ export const getSingleResultsDetails = asyncHandler(
             endTime: answer?.endTime,
             totalScore: 0,
             answers: [],
-          };
+          }
         } else {
-          groupedAnswers[questionId].startTime = answer?.startTime;
-          groupedAnswers[questionId].endTime = answer?.endTime;
+          groupedAnswers[questionId].startTime = answer?.startTime
+          groupedAnswers[questionId].endTime = answer?.endTime
         }
       } else {
         if (!groupedAnswers[questionId]) {
@@ -135,12 +136,12 @@ export const getSingleResultsDetails = asyncHandler(
             endTime: null,
             totalScore: 0,
             answers: [],
-          };
+          }
         }
 
         groupedAnswers[questionId]?.answers?.push({
           answer: answer?.answer,
-          _id:answer?._id,
+          _id: answer?._id,
           score: answer?.score,
           judge: {
             _id: answer?.judge_id?._id,
@@ -149,47 +150,57 @@ export const getSingleResultsDetails = asyncHandler(
           },
           startTime: answer?.startTime,
           endTime: answer?.endTime,
-        });
+        })
 
-        groupedAnswers[questionId].totalScore += answer?.score || 0;
-        totalScore += answer?.score || 0;
+        groupedAnswers[questionId].totalScore += answer?.score || 0
+        totalScore += answer?.score || 0
       }
-    });
+    })
 
     res.status(200).json({
       success: true,
       result: result,
       totalScore: totalScore,
       questions: Object.values(groupedAnswers),
-      msg: "Result details successfully retrieved",
-    });
-  }
-);
+      msg: 'Result details successfully retrieved',
+    })
+  },
+)
 
 // PATCH || update single score
 
 export const updateAnswer = asyncHandler(
   async (req: Request, res: Response) => {
-    const { answerId } = req.body;
+    const { answerId, score } = req.body
 
     if (!answerId) {
-      res.status(400);
-      throw new Error("Answer Id  not found");
+      res.status(400)
+      throw new Error('Answer Id  not found')
     }
 
+    console.log(req.body, 'req.body')
+    const question = await Answer.findOne({
+      _id: new mongoose.Types.ObjectId(String(answerId)),
+      isDeleted: false,
+    })
+
     const updatedAnswer = await Answer.findOneAndUpdate(
-      { _id: answerId, isDeleted: false },
-      req.body,
-      { new: true }
-    );
+      { _id: new mongoose.Types.ObjectId(String(answerId)), isDeleted: false },
+      {
+        ...(score && {
+          score: Number(score),
+        }),
+      },
+      { new: true },
+    )
     if (!updatedAnswer) {
-      res.status(400);
-      throw new Error("Answer not updated");
+      res.status(400)
+      throw new Error('Answer not updated')
     }
 
     res.status(200).json({
       success: true,
-      msg: "Answer details successfully updated",
-    });
-  }
-);
+      msg: 'Mark details successfully updated',
+    })
+  },
+)

@@ -38,6 +38,11 @@ const answersSchema = new mongoose_1.default.Schema({
         required: true,
         default: false,
     },
+    isDeleted: {
+        type: Boolean,
+        required: true,
+        default: false,
+    },
 }, {
     timestamps: true,
 });

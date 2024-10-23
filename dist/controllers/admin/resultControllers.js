@@ -16,31 +16,32 @@ exports.updateAnswer = exports.getSingleResultsDetails = exports.getResultsDetai
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const result_1 = __importDefault(require("../../models/result"));
 const answers_1 = __importDefault(require("../../models/answers"));
+const mongoose_1 = __importDefault(require("mongoose"));
 // GET || get Result details
 exports.getResultsDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    const sortBy = req.query.sortBy || "createdAt";
-    const sortOrder = req.query.sortOrder === "asc" ? 1 : -1;
-    const searchData = req.query.search || "";
-    const zones = req.query.zones || "";
+    const sortBy = req.query.sortBy || 'createdAt';
+    const sortOrder = req.query.sortOrder === 'asc' ? 1 : -1;
+    const searchData = req.query.search || '';
+    const zones = req.query.zones || '';
     const query = { isDeleted: false, isCompleted: true };
-    if (zones !== "") {
+    if (zones !== '') {
         query.zone = { $in: zones };
     }
     const participantMatch = {};
-    if (searchData !== "") {
-        participantMatch["name"] = {
-            $regex: new RegExp(`^${searchData}.*`, "i"),
+    if (searchData !== '') {
+        participantMatch['name'] = {
+            $regex: new RegExp(`^${searchData}.*`, 'i'),
         };
     }
     const results = yield result_1.default.find(query)
         .populate({
-        path: "participant_id",
-        select: "name image",
+        path: 'participant_id',
+        select: 'name image',
         match: participantMatch,
     })
-        .populate("zone", "_id name")
+        .populate('zone', '_id name')
         .sort({ [sortBy]: sortOrder })
         .skip((page - 1) * limit)
         .limit(limit);
@@ -50,8 +51,8 @@ exports.getResultsDetails = (0, express_async_handler_1.default)((req, res) => _
         { $match: { result_id: { $in: resultIds }, isCompleted: true } },
         {
             $group: {
-                _id: "$result_id",
-                totalScore: { $sum: "$score" },
+                _id: '$result_id',
+                totalScore: { $sum: '$score' },
             },
         },
     ]);
@@ -65,7 +66,7 @@ exports.getResultsDetails = (0, express_async_handler_1.default)((req, res) => _
         results: resultsWithTotalScores || [],
         currentPage: page,
         totalPages: Math.ceil(totalDocuments / limit),
-        msg: "Result details successfully retrieved",
+        msg: 'Result details successfully retrieved',
     });
 }));
 // GET || get single Result details
@@ -73,25 +74,25 @@ exports.getSingleResultsDetails = (0, express_async_handler_1.default)((req, res
     const { resultId } = req.params;
     if (!resultId) {
         res.status(400);
-        throw new Error("resultId is required");
+        throw new Error('resultId is required');
     }
     const result = yield result_1.default.findOne({
         _id: resultId,
         isDeleted: false,
         isCompleted: true,
     })
-        .populate("zone", "_id name")
-        .populate("participant_id", "_id name image email phone address");
+        .populate('zone', '_id name')
+        .populate('participant_id', '_id name image email phone address');
     if (!result) {
         res.status(400);
-        throw new Error("Result not found");
+        throw new Error('Result not found');
     }
     const answers = yield answers_1.default.find({
         result_id: resultId,
         isCompleted: true,
     })
-        .populate("question_id", "_id question answer")
-        .populate("judge_id", "_id name image isMain");
+        .populate('question_id', '_id question answer')
+        .populate('judge_id', '_id name image isMain');
     const groupedAnswers = {};
     let totalScore = 0;
     answers === null || answers === void 0 ? void 0 : answers.forEach((answer) => {
@@ -147,23 +148,30 @@ exports.getSingleResultsDetails = (0, express_async_handler_1.default)((req, res
         result: result,
         totalScore: totalScore,
         questions: Object.values(groupedAnswers),
-        msg: "Result details successfully retrieved",
+        msg: 'Result details successfully retrieved',
     });
 }));
 // PATCH || update single score
 exports.updateAnswer = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { answerId } = req.body;
+    const { answerId, score } = req.body;
     if (!answerId) {
         res.status(400);
-        throw new Error("Answer Id  not found");
+        throw new Error('Answer Id  not found');
     }
-    const updatedAnswer = yield answers_1.default.findOneAndUpdate({ _id: answerId, isDeleted: false }, req.body, { new: true });
+    console.log(req.body, 'req.body');
+    const question = yield answers_1.default.findOne({
+        _id: new mongoose_1.default.Types.ObjectId(String(answerId)),
+        isDeleted: false,
+    });
+    const updatedAnswer = yield answers_1.default.findOneAndUpdate({ _id: new mongoose_1.default.Types.ObjectId(String(answerId)), isDeleted: false }, Object.assign({}, (score && {
+        score: Number(score),
+    })), { new: true });
     if (!updatedAnswer) {
         res.status(400);
-        throw new Error("Answer not updated");
+        throw new Error('Answer not updated');
     }
     res.status(200).json({
         success: true,
-        msg: "Answer details successfully updated",
+        msg: 'Mark details successfully updated',
     });
 }));
