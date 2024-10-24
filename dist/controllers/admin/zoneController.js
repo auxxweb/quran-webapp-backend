@@ -23,9 +23,9 @@ exports.uploadZoneDetails = (0, express_async_handler_1.default)((req, res) => _
         res.status(400);
         throw new Error("Please enter all the fields");
     }
-    const regExp = new RegExp(`^${name}$`);
+    const regExp = new RegExp(`^${name.trim()}$`);
     const existZone = yield zones_1.default.findOne({
-        name: { $regex: regExp, $options: "" },
+        name: { $regex: regExp, $options: "i" },
         isDeleted: false,
     });
     if (existZone) {

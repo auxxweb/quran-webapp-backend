@@ -12,10 +12,10 @@ export const uploadZoneDetails = asyncHandler(
       res.status(400);
       throw new Error("Please enter all the fields");
     }
-    const regExp = new RegExp(`^${name}$`);
+    const regExp = new RegExp(`^${name.trim()}$`);
 
     const existZone = await Zone.findOne({
-      name: { $regex: regExp, $options: "" },
+      name: { $regex: regExp, $options: "i" },
       isDeleted: false,
     });
     if (existZone) {
