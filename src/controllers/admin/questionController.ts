@@ -1,8 +1,7 @@
 import { Request, Response } from "express";
 import asyncHandler from "express-async-handler";
-import uniqid from "uniqid";
-import store from "store";
 import Question from "../../models/question";
+import { createQuestionId } from "../../utils/app.utils";
 
 export const uploadQuestionDetails = asyncHandler(
   async (req: Request, res: Response) => {
@@ -22,11 +21,9 @@ export const uploadQuestionDetails = asyncHandler(
       res.status(400);
       throw new Error(`This question already exists`);
     }
-    let tx_uuid = uniqid().slice(0, 6); 
-    store.set("uuid", { tx: tx_uuid });
     const newQuestion = await Question.create({
       ...req.body,
-      questionId: tx_uuid,
+      questionId: await createQuestionId(),
     });
     if (!newQuestion) {
       res.status(400);

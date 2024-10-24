@@ -14,9 +14,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getSingleBundleDetails = exports.getBundleDetails = exports.deleteBundleDetails = exports.updateBundleDetails = exports.uploadBundleDetails = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
-const uniqid_1 = __importDefault(require("uniqid"));
-const store_1 = __importDefault(require("store"));
 const bundle_1 = __importDefault(require("../../models/bundle"));
+const app_utils_1 = require("../../utils/app.utils");
 exports.uploadBundleDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { questions, title } = req.body;
     if (!questions || !title) {
@@ -32,9 +31,7 @@ exports.uploadBundleDetails = (0, express_async_handler_1.default)((req, res) =>
         res.status(400);
         throw new Error(`This bundle title already exists`);
     }
-    let tx_uuid = (0, uniqid_1.default)().slice(0, 6);
-    store_1.default.set("uuid", { tx: tx_uuid });
-    const bundle = yield bundle_1.default.create(Object.assign(Object.assign({}, req.body), { bundleId: tx_uuid }));
+    const bundle = yield bundle_1.default.create(Object.assign(Object.assign({}, req.body), { bundleId: yield (0, app_utils_1.createBundleId)() }));
     if (!bundle) {
         res.status(400);
         throw new Error("Bundle upload failed");

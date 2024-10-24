@@ -14,9 +14,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getSingleQuestionDetails = exports.getAllQuestionsNames = exports.getQuestionDetails = exports.deleteQuestionDetails = exports.updateQuestionDetails = exports.uploadQuestionDetails = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
-const uniqid_1 = __importDefault(require("uniqid"));
-const store_1 = __importDefault(require("store"));
 const question_1 = __importDefault(require("../../models/question"));
+const app_utils_1 = require("../../utils/app.utils");
 exports.uploadQuestionDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { question, answer } = req.body;
     if (!question || !answer) {
@@ -32,9 +31,7 @@ exports.uploadQuestionDetails = (0, express_async_handler_1.default)((req, res) 
         res.status(400);
         throw new Error(`This question already exists`);
     }
-    let tx_uuid = (0, uniqid_1.default)().slice(0, 6);
-    store_1.default.set("uuid", { tx: tx_uuid });
-    const newQuestion = yield question_1.default.create(Object.assign(Object.assign({}, req.body), { questionId: tx_uuid }));
+    const newQuestion = yield question_1.default.create(Object.assign(Object.assign({}, req.body), { questionId: yield (0, app_utils_1.createQuestionId)() }));
     if (!newQuestion) {
         res.status(400);
         throw new Error("Question upload failed");
