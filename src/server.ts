@@ -29,8 +29,8 @@ const whitelist = [
   'http://localhost:3001',
   'https://gedexoquizadmin.auxxweb.in',
   'https://gedexoquiz.auxxweb.in',
-  'https://a.auxxweb.in',
-  'https://f.auxxweb.in',
+  'https://admin.aslamquranaward.com',
+  'https://client.aslamquranaward.com',
 ]
 
 const corsOptions = {
