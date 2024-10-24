@@ -34,20 +34,44 @@ const index_2 = __importDefault(require("./routes/participant/index"));
 const errorMiddlewares_1 = require("./middlewares/errorMiddlewares");
 const admin_1 = __importDefault(require("./models/admin"));
 const app = (0, express_1.default)();
+const whitelist = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'https://gedexoquizadmin.auxxweb.in',
+    'https://gedexoquiz.auxxweb.in',
+    'https://a.auxxweb.in',
+    'https://f.auxxweb.in',
+];
 const corsOptions = {
-    origin: ['http://localhost:3000', "http://localhost:3001", 'https://gedexoquizadmin.auxxweb.in', "https://gedexoquiz.auxxweb.in", "https://a.auxxweb.in", "https://f.auxxweb.in"],
+    // eslint-disable-next-line consistent-return
+    origin(origin, callback) {
+        console.log(origin, 'origin', whitelist.indexOf(origin) !== -1, 'wishList', whitelist);
+        if (!origin) {
+            // for mobile app and postman client
+            return callback(null, true);
+        }
+        if (whitelist.indexOf(origin) !== -1) {
+            callback(null, true);
+        }
+        else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true,
-    optionsSuccessStatus: 200
+    optionsSuccessStatus: 200,
 };
 app.use((0, cors_1.default)(corsOptions));
 app.use(express_1.default.json());
 app.use(body_parser_1.default.json());
 app.use(body_parser_1.default.urlencoded({ extended: true }));
-app.get("/", (req, res) => res.json({ success: true, msg: "Quran_Quiz app server working successfully!" }));
+app.get('/', (req, res) => res.json({
+    success: true,
+    msg: 'Quran_Quiz app server working successfully!',
+}));
 // Judge Routes
-app.use("/api/judge", index_1.default);
+app.use('/api/judge', index_1.default);
 // Judge Routes
-app.use("/api/participant", index_2.default);
+app.use('/api/participant', index_2.default);
 // Admin Routes
 app.use('/api/admin', adminRoutes_1.default);
 app.use('/api/admin/auth', authRoutes_1.default);
@@ -58,14 +82,14 @@ app.use('/api/admin/question', questionRoutes_1.default);
 app.use('/api/admin/bundle', bundleRoutes_1.default);
 app.use('/api/admin/result', resultRoutes_1.default);
 const addAdmin = () => __awaiter(void 0, void 0, void 0, function* () {
-    const email = "admin@quranapp.com";
-    const password = "admin@123";
+    const email = 'admin@quranapp.com';
+    const password = 'admin@123';
     const salt = yield bcryptjs_1.default.genSaltSync(10);
     const hashedPassword = yield bcryptjs_1.default.hash(password.trim(), salt);
     yield admin_1.default.create({
         email,
         password: hashedPassword,
-        name: "Admin"
+        name: 'Admin',
     });
 });
 // addAdmin()
@@ -78,15 +102,15 @@ exports.io = new socket_io_1.Server(server, {
     pingTimeout: 60000,
     cors: {
         origin: '*',
-        methods: ['GET', 'POST', "PATCH", "DELETE"],
+        methods: ['GET', 'POST', 'PATCH', 'DELETE'],
         credentials: false,
     },
 });
-exports.io.on("connection", (socket) => {
+exports.io.on('connection', (socket) => {
     socket.on('join', (zoneId) => {
         console.log(`Zone ${socket.id} joined room ${zoneId}`);
         socket.join(zoneId);
-        socket.emit("connected");
+        socket.emit('connected');
     });
     socket.on('selected-participant', ({ success, userId, zoneId }) => {
         console.log(`Broadcasting selected participant to zone: ${zoneId}`);
