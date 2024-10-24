@@ -23,7 +23,7 @@ export const login = async (
 
     const { email, password } = req.body;
 
-    const judge = await Judge.findOne({ email: email,isDeleted:false }).populate('zone');
+    const judge = await Judge.findOne({ email: email?.trim(),isDeleted:false }).populate('zone');
 
     if (!judge) {
       return res.status(401).json({

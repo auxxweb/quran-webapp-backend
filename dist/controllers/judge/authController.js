@@ -29,7 +29,7 @@ const login = (req, res, next) => __awaiter(void 0, void 0, void 0, function* ()
             return res.status(401).json({ error });
         }
         const { email, password } = req.body;
-        const judge = yield judge_1.default.findOne({ email: email, isDeleted: false }).populate('zone');
+        const judge = yield judge_1.default.findOne({ email: email === null || email === void 0 ? void 0 : email.trim(), isDeleted: false }).populate('zone');
         if (!judge) {
             return res.status(401).json({
                 errors: { email: "Account not found, invalid email" },

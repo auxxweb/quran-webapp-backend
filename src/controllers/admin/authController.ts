@@ -11,14 +11,13 @@ export const adminLogin = asyncHandler(async (req: Request, res: Response) => {
   const { email, password, name } = req.body;
   const salt: string = await bcrypt.genSalt(10);
 
-  const hashedPassword = await bcrypt.hash(password, salt);
 
   if (!email || !password) {
     res.status(400);
     throw new Error("Please enter all the fields");
   }
   const admin = await Admin.findOne({
-    email,
+    email:email?.trim(),
     isDeleted: false,
   });
 

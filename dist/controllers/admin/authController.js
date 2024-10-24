@@ -23,13 +23,12 @@ const admin_1 = __importDefault(require("../../models/admin"));
 exports.adminLogin = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password, name } = req.body;
     const salt = yield bcryptjs_1.default.genSalt(10);
-    const hashedPassword = yield bcryptjs_1.default.hash(password, salt);
     if (!email || !password) {
         res.status(400);
         throw new Error("Please enter all the fields");
     }
     const admin = yield admin_1.default.findOne({
-        email,
+        email: email === null || email === void 0 ? void 0 : email.trim(),
         isDeleted: false,
     });
     if (!admin) {
