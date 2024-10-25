@@ -158,9 +158,10 @@ export const getSingleBundleDetails = asyncHandler(
       throw new Error("bundleId is required");
     }
     const bundle = await Bundle.findOne({ _id: bundleId, isDeleted: false })
-      .populate({
-        path: "questions",
-      });
+    .populate({
+      path: 'questions',
+      options: { sort: { createdAt: -1 } }, // Sort by createdAt in ascending order (oldest first)
+    });
     if (!bundle) {
       res.status(400);
       throw new Error("Bundle not found");

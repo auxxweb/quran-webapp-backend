@@ -131,7 +131,8 @@ exports.getSingleBundleDetails = (0, express_async_handler_1.default)((req, res)
     }
     const bundle = yield bundle_1.default.findOne({ _id: bundleId, isDeleted: false })
         .populate({
-        path: "questions",
+        path: 'questions',
+        options: { sort: { createdAt: -1 } }, // Sort by createdAt in ascending order (oldest first)
     });
     if (!bundle) {
         res.status(400);

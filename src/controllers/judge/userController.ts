@@ -148,8 +148,16 @@ export const proceedToQuestion = async (
       ])
 
       const bundle_id = randomBundle.length > 0 ? randomBundle[0]._id : null
+      console.log(
+        randomBundle[0]?.bundleId,
+        'randombundle',
+        randomBundle[0]?.questions,
+      )
+
       const firstQuestion =
         randomBundle.length > 0 ? randomBundle[0]?.questions[0] : null
+      console.log(firstQuestion, 'firstQuestion')
+
       const bundle = await Bundle.findOne({ _id: bundle_id, isDeleted: false })
       if (!bundle) {
         return res.status(200).json({
@@ -436,14 +444,14 @@ export const getParticipantQuestions = async (
                 score: 1,
                 judge_id: 1,
                 isCompleted: 1,
-                isMain: '$judge.isMain', // Flatten isMain to be part of the submittedAnswers
+                isMain: '$judge.isMain',
+                createdAt: 1, // Add createdAt for sorting inside submittedAnswers
               },
             },
           ],
-          as: 'submittedAnswers', // Keep all submitted answers as an array
+          as: 'submittedAnswers',
         },
       },
-      // Add a lookup for Participant to include name and zone
       {
         $lookup: {
           from: 'participants',
@@ -459,6 +467,19 @@ export const getParticipantQuestions = async (
         },
       },
       {
+        $addFields: {
+          // Check if submittedAnswers array is not empty
+          hasSubmittedAnswers: { $gt: [{ $size: '$submittedAnswers' }, 0] },
+          earliestSubmittedAt: {
+            $cond: {
+              if: { $gt: [{ $size: '$submittedAnswers' }, 0] },
+              then: { $min: '$submittedAnswers.createdAt' },
+              else: null,
+            },
+          },
+        },
+      },
+      {
         $group: {
           _id: '$_id',
           bundle_id: { $first: '$bundle_id' },
@@ -470,8 +491,64 @@ export const getParticipantQuestions = async (
               _id: '$questions._id',
               question: '$questions.question',
               answer: '$questions.answer',
-              submittedAnswers: '$submittedAnswers', // Now an array of all answers with flattened isMain
+              submittedAnswers: '$submittedAnswers',
+              hasSubmittedAnswers: '$hasSubmittedAnswers', // Use this for sorting later
+              earliestSubmittedAt: '$earliestSubmittedAt',
             },
+          },
+        },
+      },
+      {
+        $addFields: {
+          questions: {
+            // Sort the questions based on earliestSubmittedAt
+            $sortArray: {
+              input: '$questions',
+              sortBy: { earliestSubmittedAt: 1 }, // Ascending order
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          questions: {
+            $concatArrays: [
+              // First, filter and sort questions with submittedAnswers
+              {
+                $map: {
+                  input: {
+                    $filter: {
+                      input: '$questions',
+                      as: 'question',
+                      cond: {
+                        $gt: [{ $size: '$$question.submittedAnswers' }, 0],
+                      },
+                    },
+                  },
+                  as: 'question',
+                  in: {
+                    _id: '$$question._id',
+                    question: '$$question.question',
+                    answer: '$$question.answer',
+                    submittedAnswers: {
+                      $sortArray: {
+                        input: '$$question.submittedAnswers',
+                        sortBy: { isCompleted: -1 }, // Sort by createdAt (ascending)
+                      },
+                    },
+                    earliestSubmittedAt: '$$question.earliestSubmittedAt',
+                  },
+                },
+              },
+              // Then add questions without submittedAnswers
+              {
+                $filter: {
+                  input: '$questions',
+                  as: 'question',
+                  cond: { $eq: [{ $size: '$$question.submittedAnswers' }, 0] },
+                },
+              },
+            ],
           },
         },
       },
@@ -482,9 +559,9 @@ export const getParticipantQuestions = async (
           participant_id: 1,
           participant_name: 1,
           participant_image: 1,
-          questions: 1,
+          questions: 1
         },
-      },
+      }
     ])
 
     if (result.length === 0) {

@@ -90,7 +90,7 @@ const getUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.getUser = getUser;
 const proceedToQuestion = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
+    var _a, _b, _c, _d;
     try {
         const result_dto = (0, class_transformer_1.plainToClass)(resultDto_1.ResultDto, (_a = req.body) !== null && _a !== void 0 ? _a : {});
         const error_messages = yield (0, class_validator_1.validate)(result_dto);
@@ -136,7 +136,9 @@ const proceedToQuestion = (req, res, next) => __awaiter(void 0, void 0, void 0, 
                 { $sample: { size: 1 } },
             ]);
             const bundle_id = randomBundle.length > 0 ? randomBundle[0]._id : null;
-            const firstQuestion = randomBundle.length > 0 ? (_b = randomBundle[0]) === null || _b === void 0 ? void 0 : _b.questions[0] : null;
+            console.log((_b = randomBundle[0]) === null || _b === void 0 ? void 0 : _b.bundleId, 'randombundle', (_c = randomBundle[0]) === null || _c === void 0 ? void 0 : _c.questions);
+            const firstQuestion = randomBundle.length > 0 ? (_d = randomBundle[0]) === null || _d === void 0 ? void 0 : _d.questions[0] : null;
+            console.log(firstQuestion, 'firstQuestion');
             const bundle = yield bundle_1.default.findOne({ _id: bundle_id, isDeleted: false });
             if (!bundle) {
                 return res.status(200).json({
@@ -363,14 +365,14 @@ const getParticipantQuestions = (req, res, next) => __awaiter(void 0, void 0, vo
                                 score: 1,
                                 judge_id: 1,
                                 isCompleted: 1,
-                                isMain: '$judge.isMain', // Flatten isMain to be part of the submittedAnswers
+                                isMain: '$judge.isMain',
+                                createdAt: 1, // Add createdAt for sorting inside submittedAnswers
                             },
                         },
                     ],
-                    as: 'submittedAnswers', // Keep all submitted answers as an array
+                    as: 'submittedAnswers',
                 },
             },
-            // Add a lookup for Participant to include name and zone
             {
                 $lookup: {
                     from: 'participants',
@@ -386,6 +388,19 @@ const getParticipantQuestions = (req, res, next) => __awaiter(void 0, void 0, vo
                 },
             },
             {
+                $addFields: {
+                    // Check if submittedAnswers array is not empty
+                    hasSubmittedAnswers: { $gt: [{ $size: '$submittedAnswers' }, 0] },
+                    earliestSubmittedAt: {
+                        $cond: {
+                            if: { $gt: [{ $size: '$submittedAnswers' }, 0] },
+                            then: { $min: '$submittedAnswers.createdAt' },
+                            else: null,
+                        },
+                    },
+                },
+            },
+            {
                 $group: {
                     _id: '$_id',
                     bundle_id: { $first: '$bundle_id' },
@@ -397,8 +412,64 @@ const getParticipantQuestions = (req, res, next) => __awaiter(void 0, void 0, vo
                             _id: '$questions._id',
                             question: '$questions.question',
                             answer: '$questions.answer',
-                            submittedAnswers: '$submittedAnswers', // Now an array of all answers with flattened isMain
+                            submittedAnswers: '$submittedAnswers',
+                            hasSubmittedAnswers: '$hasSubmittedAnswers', // Use this for sorting later
+                            earliestSubmittedAt: '$earliestSubmittedAt',
                         },
+                    },
+                },
+            },
+            {
+                $addFields: {
+                    questions: {
+                        // Sort the questions based on earliestSubmittedAt
+                        $sortArray: {
+                            input: '$questions',
+                            sortBy: { earliestSubmittedAt: 1 }, // Ascending order
+                        },
+                    },
+                },
+            },
+            {
+                $addFields: {
+                    questions: {
+                        $concatArrays: [
+                            // First, filter and sort questions with submittedAnswers
+                            {
+                                $map: {
+                                    input: {
+                                        $filter: {
+                                            input: '$questions',
+                                            as: 'question',
+                                            cond: {
+                                                $gt: [{ $size: '$$question.submittedAnswers' }, 0],
+                                            },
+                                        },
+                                    },
+                                    as: 'question',
+                                    in: {
+                                        _id: '$$question._id',
+                                        question: '$$question.question',
+                                        answer: '$$question.answer',
+                                        submittedAnswers: {
+                                            $sortArray: {
+                                                input: '$$question.submittedAnswers',
+                                                sortBy: { isCompleted: -1 }, // Sort by createdAt (ascending)
+                                            },
+                                        },
+                                        earliestSubmittedAt: '$$question.earliestSubmittedAt',
+                                    },
+                                },
+                            },
+                            // Then add questions without submittedAnswers
+                            {
+                                $filter: {
+                                    input: '$questions',
+                                    as: 'question',
+                                    cond: { $eq: [{ $size: '$$question.submittedAnswers' }, 0] },
+                                },
+                            },
+                        ],
                     },
                 },
             },
@@ -409,9 +480,9 @@ const getParticipantQuestions = (req, res, next) => __awaiter(void 0, void 0, vo
                     participant_id: 1,
                     participant_name: 1,
                     participant_image: 1,
-                    questions: 1,
+                    questions: 1
                 },
-            },
+            }
         ]);
         if (result.length === 0) {
             return res.status(404).json({

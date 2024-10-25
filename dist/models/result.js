@@ -10,6 +10,9 @@ const resultSchema = new mongoose_1.default.Schema({
         ref: "Zone",
         required: true,
     },
+    earliestSubmittedAt: {
+        type: String
+    },
     participant_id: {
         type: mongoose_1.default.Schema.Types.ObjectId,
         ref: "Participant",

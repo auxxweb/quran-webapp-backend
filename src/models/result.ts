@@ -10,6 +10,7 @@ interface Result extends Document {
   currentQuestion: string;
   isDeleted: boolean;
   isCompleted: boolean;
+  earliestSubmittedAt:string
 }
 
 const resultSchema = new mongoose.Schema<Result>(
@@ -18,6 +19,9 @@ const resultSchema = new mongoose.Schema<Result>(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Zone",
       required: true,
+    },
+    earliestSubmittedAt:{
+type:String
     },
     participant_id: {
       type: mongoose.Schema.Types.ObjectId,
