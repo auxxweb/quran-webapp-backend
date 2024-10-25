@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import asyncHandler from "express-async-handler";
 import Bundle from "../../models/bundle";
 import { createBundleId } from "../../utils/app.utils";
+import mongoose from "mongoose";
+import Result from "../../models/result";
 
 export const uploadBundleDetails = asyncHandler(
   async (req: Request, res: Response) => {
@@ -99,6 +101,18 @@ export const deleteBundleDetails = asyncHandler(
       res.status(400);
       throw new Error("bundleId not found");
     }
+
+    const isInLiveCompetition = await Result.findOne({
+      bundle_id: new mongoose.Types.ObjectId(String(bundleId)),
+      isCompleted: false,
+      isDeleted: false,
+    })
+
+    if (isInLiveCompetition) {
+      res.status(400)
+      throw new Error('The bundle is already using in a live competition')
+    }
+
 
     const bundle = await Bundle.findByIdAndUpdate(
       { _id: bundleId },

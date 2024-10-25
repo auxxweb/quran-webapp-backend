@@ -31,6 +31,7 @@ exports.uploadJudgeDetails = (0, express_async_handler_1.default)((req, res) => 
     const existJudge = yield judge_1.default.findOne({
         email,
         isDeleted: false,
+        zone: new mongoose_1.default.Types.ObjectId(String(zone)),
     });
     if (existJudge) {
         res.status(400);

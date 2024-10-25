@@ -16,6 +16,8 @@ exports.getSingleBundleDetails = exports.getBundleDetails = exports.deleteBundle
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const bundle_1 = __importDefault(require("../../models/bundle"));
 const app_utils_1 = require("../../utils/app.utils");
+const mongoose_1 = __importDefault(require("mongoose"));
+const result_1 = __importDefault(require("../../models/result"));
 exports.uploadBundleDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { questions, title } = req.body;
     if (!questions || !title) {
@@ -85,6 +87,15 @@ exports.deleteBundleDetails = (0, express_async_handler_1.default)((req, res) =>
     if (!bundleId) {
         res.status(400);
         throw new Error("bundleId not found");
+    }
+    const isInLiveCompetition = yield result_1.default.findOne({
+        bundle_id: new mongoose_1.default.Types.ObjectId(String(bundleId)),
+        isCompleted: false,
+        isDeleted: false,
+    });
+    if (isInLiveCompetition) {
+        res.status(400);
+        throw new Error('The bundle is already using in a live competition');
     }
     const bundle = yield bundle_1.default.findByIdAndUpdate({ _id: bundleId }, {
         isDeleted: true,

@@ -17,6 +17,7 @@ export const uploadParticipantDetails = asyncHandler(
     const existParticipant = await Participant.findOne({
       email,
       isDeleted: false,
+      zone: new mongoose.Types.ObjectId(String(zone)),
     })
     if (existParticipant) {
       res.status(400)

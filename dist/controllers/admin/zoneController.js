@@ -19,6 +19,8 @@ const store_1 = __importDefault(require("store"));
 const zones_1 = __importDefault(require("../../models/zones"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const result_1 = __importDefault(require("../../models/result"));
+const judge_1 = __importDefault(require("../../models/judge"));
+const participant_1 = __importDefault(require("../../models/participant"));
 exports.uploadZoneDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { name, description } = req.body;
     if (!name || !description) {
@@ -100,17 +102,32 @@ exports.deleteZoneDetails = (0, express_async_handler_1.default)((req, res) => _
         res.status(400);
         throw new Error("Live competition in this zone; can't delete.");
     }
-    const zone = yield zones_1.default.findByIdAndUpdate({ _id: zoneId }, {
-        isDeleted: true,
-    }, { new: true });
-    if (!zone) {
-        res.status(400);
-        throw new Error('Deletion failed');
+    try {
+        // Update the zone to mark it as deleted
+        const updatedZone = yield zones_1.default.findByIdAndUpdate(zoneId, { isDeleted: true }, { new: true });
+        // Update judges and participants in parallel
+        yield Promise.all([
+            judge_1.default.updateMany({ zone: new mongoose_1.default.Types.ObjectId(String(zoneId)) }, { isDeleted: true }),
+            participant_1.default.updateMany({ zone: new mongoose_1.default.Types.ObjectId(String(zoneId)) }, { isDeleted: true }),
+        ]);
+        res.status(200).json({
+            success: true,
+            msg: `${updatedZone === null || updatedZone === void 0 ? void 0 : updatedZone.name} zone successfully deleted`,
+        });
     }
-    res.status(200).json({
-        success: true,
-        msg: `${zone === null || zone === void 0 ? void 0 : zone.name} successfully deleted`,
-    });
+    catch (error) {
+        // Rollback changes if an error occurs
+        yield Promise.all([
+            zones_1.default.findByIdAndUpdate(zoneId, { isDeleted: false }),
+            judge_1.default.updateMany({ zone: new mongoose_1.default.Types.ObjectId(String(zoneId)) }, { isDeleted: true }),
+            participant_1.default.updateMany({ zone: new mongoose_1.default.Types.ObjectId(String(zoneId)) }, { isDeleted: true }),
+        ]);
+        res.status(400).json({ message: 'Deletion failed' });
+    }
+    // if (!zone) {
+    //   res.status(400)
+    //   throw new Error('Deletion failed')
+    // }
 }));
 // GET || get Zone details
 exports.getZoneDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
