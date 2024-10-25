@@ -139,10 +139,10 @@ const proceedToQuestion = (req, res, next) => __awaiter(void 0, void 0, void 0, 
                         $match: {
                             isDeleted: false,
                             questions: { $exists: true, $ne: [] },
-                            _id: { $ne: lastResult === null || lastResult === void 0 ? void 0 : lastResult.bundle_id }
-                        }
+                            _id: { $ne: lastResult === null || lastResult === void 0 ? void 0 : lastResult.bundle_id },
+                        },
                     },
-                    { $sample: { size: 1 } }
+                    { $sample: { size: 1 } },
                 ]);
             }
             else {
@@ -150,10 +150,10 @@ const proceedToQuestion = (req, res, next) => __awaiter(void 0, void 0, void 0, 
                     {
                         $match: {
                             isDeleted: false,
-                            questions: { $exists: true, $ne: [] }
-                        }
+                            questions: { $exists: true, $ne: [] },
+                        },
                     },
-                    { $sample: { size: 1 } }
+                    { $sample: { size: 1 } },
                 ]);
             }
             const bundle_id = randomBundle.length > 0 ? randomBundle[0]._id : null;
@@ -217,9 +217,14 @@ const proceedToNextQuestion = (req, res, next) => __awaiter(void 0, void 0, void
             result_id,
             question_id: old_question_id,
             isCompleted: false,
-        }, { judge_id: 1 }).populate('judge_id', 'isMain');
+        }, { judge_id: 1 }).populate('judge_id', 'isMain isBlocked');
         if (answers) {
-            const notSubmitted = answers === null || answers === void 0 ? void 0 : answers.find((answer) => { var _a; return ((_a = answer === null || answer === void 0 ? void 0 : answer.judge_id) === null || _a === void 0 ? void 0 : _a.isMain) === false; });
+            const notSubmitted = answers === null || answers === void 0 ? void 0 : answers.find((answer) => {
+                var _a, _b;
+                return ((_a = answer === null || answer === void 0 ? void 0 : answer.judge_id) === null || _a === void 0 ? void 0 : _a.isMain) === false
+                    &&
+                        ((_b = answer === null || answer === void 0 ? void 0 : answer.judge_id) === null || _b === void 0 ? void 0 : _b.isBlocked) === false;
+            });
             if (notSubmitted) {
                 return res.status(200).json({
                     message: 'All judges not submitted answer and score',
@@ -248,7 +253,7 @@ const proceedToNextQuestion = (req, res, next) => __awaiter(void 0, void 0, void
         }
         else {
             const result = yield result_1.default.findOneAndUpdate({ _id: result_id }, { currentQuestion: question_id }, { new: true });
-            const judges = yield judge_1.default.find({ zone: req.judge.zone, isDeleted: false }, { _id: 1 });
+            const judges = yield judge_1.default.find({ zone: req.judge.zone, isDeleted: false, isBlocked: false }, { _id: 1 });
             const answersPromises = judges.map((item) => __awaiter(void 0, void 0, void 0, function* () {
                 const createdAnswer = yield answers_1.default.findOne({
                     result_id: result_id,
@@ -353,7 +358,11 @@ const getParticipantQuestions = (req, res, next) => __awaiter(void 0, void 0, vo
             {
                 $lookup: {
                     from: 'answers',
-                    let: { result_id: '$_id', question_id: '$questions._id', judge_id: (_a = req === null || req === void 0 ? void 0 : req.judge) === null || _a === void 0 ? void 0 : _a._id },
+                    let: {
+                        result_id: '$_id',
+                        question_id: '$questions._id',
+                        judge_id: (_a = req === null || req === void 0 ? void 0 : req.judge) === null || _a === void 0 ? void 0 : _a._id,
+                    },
                     pipeline: [
                         {
                             $match: {
@@ -501,9 +510,9 @@ const getParticipantQuestions = (req, res, next) => __awaiter(void 0, void 0, vo
                     participant_id: 1,
                     participant_name: 1,
                     participant_image: 1,
-                    questions: 1
+                    questions: 1,
                 },
-            }
+            },
         ]);
         if (result.length === 0) {
             return res.status(404).json({

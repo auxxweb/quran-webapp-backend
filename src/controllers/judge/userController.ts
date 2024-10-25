@@ -144,32 +144,32 @@ export const proceedToQuestion = async (
     } else {
       const lastResult = await Result.findOne(
         { zone: req.judge.zone },
-        { bundle_id: 1 }
-      ).sort({ createdAt: -1 }); 
-      
-      let randomBundle;
-      
+        { bundle_id: 1 },
+      ).sort({ createdAt: -1 })
+
+      let randomBundle
+
       if (lastResult && lastResult?.bundle_id) {
         randomBundle = await Bundle.aggregate([
           {
             $match: {
               isDeleted: false,
               questions: { $exists: true, $ne: [] },
-              _id: { $ne: lastResult?.bundle_id } 
-            }
+              _id: { $ne: lastResult?.bundle_id },
+            },
           },
-          { $sample: { size: 1 } }
-        ]);
+          { $sample: { size: 1 } },
+        ])
       } else {
         randomBundle = await Bundle.aggregate([
           {
             $match: {
               isDeleted: false,
-              questions: { $exists: true, $ne: [] }
-            }
+              questions: { $exists: true, $ne: [] },
+            },
           },
-          { $sample: { size: 1 } }
-        ]);
+          { $sample: { size: 1 } },
+        ])
       }
 
       const bundle_id = randomBundle.length > 0 ? randomBundle[0]._id : null
@@ -254,11 +254,15 @@ export const proceedToNextQuestion = async (
         isCompleted: false,
       },
       { judge_id: 1 },
-    ).populate('judge_id', 'isMain')
+    ).populate('judge_id', 'isMain isBlocked')
+
 
     if (answers) {
       const notSubmitted = answers?.find(
-        (answer: any) => answer?.judge_id?.isMain === false,
+        (answer: any) =>
+          answer?.judge_id?.isMain === false
+         &&
+          answer?.judge_id?.isBlocked === false,
       )
 
       if (notSubmitted) {
@@ -290,6 +294,7 @@ export const proceedToNextQuestion = async (
       )
     }
     let data
+    
     if (isLastSubmit) {
       await Result.findOneAndUpdate(
         { _id: result_id },
@@ -297,22 +302,26 @@ export const proceedToNextQuestion = async (
         { new: true },
       )
     } else {
+      
       const result = await Result.findOneAndUpdate(
         { _id: result_id },
         { currentQuestion: question_id },
         { new: true },
       )
       const judges = await Judge.find(
-        { zone: req.judge.zone, isDeleted: false },
+        { zone: req.judge.zone, isDeleted: false,isBlocked:false },
         { _id: 1 },
       )
+      
       const answersPromises = judges.map(async (item: any) => {
         const createdAnswer = await Answer.findOne({
           result_id: result_id,
           question_id: question_id,
           judge_id: item._id,
         })
+        
         if (!createdAnswer) {
+          
           await Answer.create({
             question_id,
             result_id,
@@ -322,6 +331,7 @@ export const proceedToNextQuestion = async (
         }
       })
       data = await Promise.all(answersPromises)
+      
     }
 
     return res.status(200).json({
@@ -431,7 +441,11 @@ export const getParticipantQuestions = async (
       {
         $lookup: {
           from: 'answers',
-          let: { result_id: '$_id', question_id: '$questions._id' , judge_id: req?.judge?._id },
+          let: {
+            result_id: '$_id',
+            question_id: '$questions._id',
+            judge_id: req?.judge?._id,
+          },
           pipeline: [
             {
               $match: {
@@ -579,11 +593,10 @@ export const getParticipantQuestions = async (
           participant_id: 1,
           participant_name: 1,
           participant_image: 1,
-          questions: 1
+          questions: 1,
         },
-      }
+      },
     ])
-
 
     if (result.length === 0) {
       return res.status(404).json({
