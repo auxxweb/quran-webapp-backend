@@ -90,7 +90,7 @@ const getUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.getUser = getUser;
 const proceedToQuestion = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d;
+    var _a, _b;
     try {
         const result_dto = (0, class_transformer_1.plainToClass)(resultDto_1.ResultDto, (_a = req.body) !== null && _a !== void 0 ? _a : {});
         const error_messages = yield (0, class_validator_1.validate)(result_dto);
@@ -131,14 +131,33 @@ const proceedToQuestion = (req, res, next) => __awaiter(void 0, void 0, void 0, 
             }
         }
         else {
-            const randomBundle = yield bundle_1.default.aggregate([
-                { $match: { isDeleted: false, questions: { $exists: true, $ne: [] } } },
-                { $sample: { size: 1 } },
-            ]);
+            const lastResult = yield result_1.default.findOne({ zone: req.judge.zone }, { bundle_id: 1 }).sort({ createdAt: -1 });
+            let randomBundle;
+            if (lastResult && (lastResult === null || lastResult === void 0 ? void 0 : lastResult.bundle_id)) {
+                randomBundle = yield bundle_1.default.aggregate([
+                    {
+                        $match: {
+                            isDeleted: false,
+                            questions: { $exists: true, $ne: [] },
+                            _id: { $ne: lastResult === null || lastResult === void 0 ? void 0 : lastResult.bundle_id }
+                        }
+                    },
+                    { $sample: { size: 1 } }
+                ]);
+            }
+            else {
+                randomBundle = yield bundle_1.default.aggregate([
+                    {
+                        $match: {
+                            isDeleted: false,
+                            questions: { $exists: true, $ne: [] }
+                        }
+                    },
+                    { $sample: { size: 1 } }
+                ]);
+            }
             const bundle_id = randomBundle.length > 0 ? randomBundle[0]._id : null;
-            console.log((_b = randomBundle[0]) === null || _b === void 0 ? void 0 : _b.bundleId, 'randombundle', (_c = randomBundle[0]) === null || _c === void 0 ? void 0 : _c.questions);
-            const firstQuestion = randomBundle.length > 0 ? (_d = randomBundle[0]) === null || _d === void 0 ? void 0 : _d.questions[0] : null;
-            console.log(firstQuestion, 'firstQuestion');
+            const firstQuestion = randomBundle.length > 0 ? (_b = randomBundle[0]) === null || _b === void 0 ? void 0 : _b.questions[0] : null;
             const bundle = yield bundle_1.default.findOne({ _id: bundle_id, isDeleted: false });
             if (!bundle) {
                 return res.status(200).json({
@@ -259,9 +278,9 @@ const proceedToNextQuestion = (req, res, next) => __awaiter(void 0, void 0, void
 });
 exports.proceedToNextQuestion = proceedToNextQuestion;
 const answersSubmit = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+    var _c;
     try {
-        const answers_dto = (0, class_transformer_1.plainToClass)(answers_2.AnswersDto, (_a = req.body) !== null && _a !== void 0 ? _a : {});
+        const answers_dto = (0, class_transformer_1.plainToClass)(answers_2.AnswersDto, (_c = req.body) !== null && _c !== void 0 ? _c : {});
         const error_messages = yield (0, class_validator_1.validate)(answers_dto);
         if (error_messages && error_messages.length > 0) {
             const error = yield (0, handleValidationErrors_1.handleValidationErrors)(res, error_messages);
@@ -502,7 +521,7 @@ const getParticipantQuestions = (req, res, next) => __awaiter(void 0, void 0, vo
 });
 exports.getParticipantQuestions = getParticipantQuestions;
 const getParticipantQuestionsByZone = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+    var _d;
     try {
         const { zone_id } = req.params;
         const data = yield result_1.default.aggregate([
@@ -516,7 +535,7 @@ const getParticipantQuestionsByZone = (req, res, next) => __awaiter(void 0, void
             {
                 $lookup: {
                     from: 'answers',
-                    let: { result_id: '$_id', judge_id: (_a = req === null || req === void 0 ? void 0 : req.judge) === null || _a === void 0 ? void 0 : _a._id },
+                    let: { result_id: '$_id', judge_id: (_d = req === null || req === void 0 ? void 0 : req.judge) === null || _d === void 0 ? void 0 : _d._id },
                     pipeline: [
                         {
                             $match: {

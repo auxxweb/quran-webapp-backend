@@ -142,21 +142,40 @@ export const proceedToQuestion = async (
         })
       }
     } else {
-      const randomBundle = await Bundle.aggregate([
-        { $match: { isDeleted: false, questions: { $exists: true, $ne: [] } } },
-        { $sample: { size: 1 } },
-      ])
+      const lastResult = await Result.findOne(
+        { zone: req.judge.zone },
+        { bundle_id: 1 }
+      ).sort({ createdAt: -1 }); 
+      
+      let randomBundle;
+      
+      if (lastResult && lastResult?.bundle_id) {
+        randomBundle = await Bundle.aggregate([
+          {
+            $match: {
+              isDeleted: false,
+              questions: { $exists: true, $ne: [] },
+              _id: { $ne: lastResult?.bundle_id } 
+            }
+          },
+          { $sample: { size: 1 } }
+        ]);
+      } else {
+        randomBundle = await Bundle.aggregate([
+          {
+            $match: {
+              isDeleted: false,
+              questions: { $exists: true, $ne: [] }
+            }
+          },
+          { $sample: { size: 1 } }
+        ]);
+      }
 
       const bundle_id = randomBundle.length > 0 ? randomBundle[0]._id : null
-      console.log(
-        randomBundle[0]?.bundleId,
-        'randombundle',
-        randomBundle[0]?.questions,
-      )
 
       const firstQuestion =
         randomBundle.length > 0 ? randomBundle[0]?.questions[0] : null
-      console.log(firstQuestion, 'firstQuestion')
 
       const bundle = await Bundle.findOne({ _id: bundle_id, isDeleted: false })
       if (!bundle) {
