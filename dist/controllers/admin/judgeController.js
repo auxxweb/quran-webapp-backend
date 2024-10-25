@@ -97,7 +97,7 @@ exports.updateJudgeDetails = (0, express_async_handler_1.default)((req, res) => 
             }
         }
     }
-    if (isMain === true && zone) {
+    if ((isMain === true || isMain === 'true') && zone) {
         const mainJudge = yield judge_1.default.findOne({
             zone: zone,
             isMain: true,
@@ -125,6 +125,15 @@ exports.deletejudgeDetails = (0, express_async_handler_1.default)((req, res) => 
     if (!judgeId) {
         res.status(400);
         throw new Error('judgeId not found');
+    }
+    const isMainJudge = yield judge_1.default.findOne({
+        _id: new mongoose_1.default.Types.ObjectId(String(judgeId)),
+        isDeleted: false,
+        isMain: true,
+    });
+    if (isMainJudge) {
+        res.status(400);
+        throw new Error(`Can't delete the main judge.`);
     }
     const isInLiveCompetition = yield answers_1.default.findOne({
         judge_id: new mongoose_1.default.Types.ObjectId(String(judgeId)),

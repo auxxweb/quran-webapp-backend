@@ -132,7 +132,11 @@ export const getBundleDetails = asyncHandler(
       query.bundleId = { $regex: new RegExp(`^${searchData}.*`, "i") };
     }
 
-    const bundles = await Bundle.find(query).populate("questions")
+    const bundles = await Bundle.find(query).populate({
+      path: 'questions',
+      match: { isDeleted: false },
+      options: { sort: { createdAt: -1 } }, // Sort by createdAt in ascending order (oldest first)
+    })
       .sort({ [sortBy]: sortOrder })
       .skip((page - 1) * limit)
       .limit(limit);
@@ -160,6 +164,7 @@ export const getSingleBundleDetails = asyncHandler(
     const bundle = await Bundle.findOne({ _id: bundleId, isDeleted: false })
     .populate({
       path: 'questions',
+      match: { isDeleted: false },
       options: { sort: { createdAt: -1 } }, // Sort by createdAt in ascending order (oldest first)
     });
     if (!bundle) {

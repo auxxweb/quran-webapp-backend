@@ -98,7 +98,8 @@ export const updateJudgeDetails = asyncHandler(
         }
       }
     }
-    if (isMain === true && zone) {
+
+    if ((isMain === true || isMain === 'true') && zone) {
       const mainJudge = await Judge.findOne({
         zone: zone,
         isMain: true,
@@ -139,6 +140,17 @@ export const deletejudgeDetails = asyncHandler(
     if (!judgeId) {
       res.status(400)
       throw new Error('judgeId not found')
+    }
+
+    const isMainJudge = await Judge.findOne({
+      _id: new mongoose.Types.ObjectId(String(judgeId)),
+      isDeleted: false,
+      isMain: true,
+    })
+
+    if (isMainJudge) {
+      res.status(400)
+      throw new Error(`Can't delete the main judge.`)
     }
 
     const isInLiveCompetition = await Answer.findOne({

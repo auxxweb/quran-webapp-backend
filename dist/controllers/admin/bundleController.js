@@ -109,7 +109,11 @@ exports.getBundleDetails = (0, express_async_handler_1.default)((req, res) => __
     if (searchData !== "") {
         query.bundleId = { $regex: new RegExp(`^${searchData}.*`, "i") };
     }
-    const bundles = yield bundle_1.default.find(query).populate("questions")
+    const bundles = yield bundle_1.default.find(query).populate({
+        path: 'questions',
+        match: { isDeleted: false },
+        options: { sort: { createdAt: -1 } }, // Sort by createdAt in ascending order (oldest first)
+    })
         .sort({ [sortBy]: sortOrder })
         .skip((page - 1) * limit)
         .limit(limit);
@@ -132,6 +136,7 @@ exports.getSingleBundleDetails = (0, express_async_handler_1.default)((req, res)
     const bundle = yield bundle_1.default.findOne({ _id: bundleId, isDeleted: false })
         .populate({
         path: 'questions',
+        match: { isDeleted: false },
         options: { sort: { createdAt: -1 } }, // Sort by createdAt in ascending order (oldest first)
     });
     if (!bundle) {
