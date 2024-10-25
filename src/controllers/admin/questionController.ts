@@ -2,7 +2,8 @@ import { Request, Response } from 'express'
 import asyncHandler from 'express-async-handler'
 import Question from '../../models/question'
 import { createQuestionId } from '../../utils/app.utils'
-import { FilterQuery } from 'mongoose'
+import mongoose, { FilterQuery } from 'mongoose'
+import Answer from '../../models/answers'
 
 export const uploadQuestionDetails = asyncHandler(
   async (req: Request, res: Response) => {
@@ -42,15 +43,15 @@ export const uploadQuestionDetails = asyncHandler(
 
 export const updateQuestionDetails = asyncHandler(
   async (req: Request, res: Response) => {
-    const { questionId, question } = req.body
+    const { id, question } = req.body
 
-    if (!questionId) {
+    if (!id) {
       res.status(400)
       throw new Error('Question Id  not found')
     }
     if (question) {
       const existingQuestion = await Question.findOne({
-        _id: questionId,
+        _id: id,
         isDeleted: false,
       })
       if (!existingQuestion) {
@@ -74,7 +75,7 @@ export const updateQuestionDetails = asyncHandler(
     }
 
     const updatedQuestion = await Question.findOneAndUpdate(
-      { _id: questionId, isDeleted: false },
+      { _id: id, isDeleted: false },
       req.body,
       { new: true },
     )
@@ -100,7 +101,16 @@ export const deleteQuestionDetails = asyncHandler(
       res.status(400)
       throw new Error('questionId not found')
     }
+    const isInLiveCompetition = await Answer.findOne({
+      question_id: new mongoose.Types.ObjectId(String(questionId)),
+      isCompleted: false,
+      isDeleted: false,
+    })
 
+    if (isInLiveCompetition) {
+      res.status(400)
+      throw new Error('This question is already using in a live competition')
+    }
     const question = await Question.findByIdAndUpdate(
       { _id: questionId },
       {

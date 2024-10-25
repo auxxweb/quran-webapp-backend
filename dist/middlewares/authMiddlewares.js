@@ -29,11 +29,11 @@ exports.adminProtect = (0, express_async_handler_1.default)((req, res, next) => 
         catch (error) {
             res.status(401);
             console.log(error);
-            throw new Error("Not authorized, token failed");
+            throw new Error("Login required. Please sign in to continue.");
         }
     }
     if (!token) {
         res.status(401);
-        throw new Error("Not authorized, no token");
+        throw new Error("Login required. Please sign in to continue.");
     }
 }));

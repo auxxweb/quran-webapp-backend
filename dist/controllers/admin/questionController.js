@@ -16,6 +16,8 @@ exports.getSingleQuestionDetails = exports.getAllQuestionsNames = exports.getQue
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const question_1 = __importDefault(require("../../models/question"));
 const app_utils_1 = require("../../utils/app.utils");
+const mongoose_1 = __importDefault(require("mongoose"));
+const answers_1 = __importDefault(require("../../models/answers"));
 exports.uploadQuestionDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { question, answer } = req.body;
     if (!question || !answer) {
@@ -43,14 +45,14 @@ exports.uploadQuestionDetails = (0, express_async_handler_1.default)((req, res) 
 }));
 // PATCH || update Question details
 exports.updateQuestionDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { questionId, question } = req.body;
-    if (!questionId) {
+    const { id, question } = req.body;
+    if (!id) {
         res.status(400);
         throw new Error('Question Id  not found');
     }
     if (question) {
         const existingQuestion = yield question_1.default.findOne({
-            _id: questionId,
+            _id: id,
             isDeleted: false,
         });
         if (!existingQuestion) {
@@ -69,7 +71,7 @@ exports.updateQuestionDetails = (0, express_async_handler_1.default)((req, res) 
             }
         }
     }
-    const updatedQuestion = yield question_1.default.findOneAndUpdate({ _id: questionId, isDeleted: false }, req.body, { new: true });
+    const updatedQuestion = yield question_1.default.findOneAndUpdate({ _id: id, isDeleted: false }, req.body, { new: true });
     if (!updatedQuestion) {
         res.status(400);
         throw new Error('Question not updated');
@@ -85,6 +87,15 @@ exports.deleteQuestionDetails = (0, express_async_handler_1.default)((req, res) 
     if (!questionId) {
         res.status(400);
         throw new Error('questionId not found');
+    }
+    const isInLiveCompetition = yield answers_1.default.findOne({
+        question_id: new mongoose_1.default.Types.ObjectId(String(questionId)),
+        isCompleted: false,
+        isDeleted: false,
+    });
+    if (isInLiveCompetition) {
+        res.status(400);
+        throw new Error('This question is already using in a live competition');
     }
     const question = yield question_1.default.findByIdAndUpdate({ _id: questionId }, {
         isDeleted: true,

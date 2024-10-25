@@ -2,8 +2,8 @@ import { Request, Response } from "express";
 import asyncHandler from "express-async-handler";
 import Bundle from "../../models/bundle";
 import { createBundleId } from "../../utils/app.utils";
-import mongoose from "mongoose";
 import Result from "../../models/result";
+import mongoose from "mongoose";
 
 export const uploadBundleDetails = asyncHandler(
   async (req: Request, res: Response) => {
@@ -43,15 +43,15 @@ export const uploadBundleDetails = asyncHandler(
 
 export const updateBundleDetails = asyncHandler(
   async (req: Request, res: Response) => {
-    const { bundleId, title } = req.body;
+    const { id, title } = req.body;
 
-    if (!bundleId) {
+    if (!id) {
       res.status(400);
       throw new Error("Bundle Id  not found");
     }
     if (title) {
       const bundle = await Bundle.findOne({
-        _id: bundleId,
+        _id: id,
         isDeleted: false,
       });
       if (!bundle) {
@@ -75,7 +75,7 @@ export const updateBundleDetails = asyncHandler(
     }
 
     const updatedBundle = await Bundle.findOneAndUpdate(
-      { _id: bundleId, isDeleted: false },
+      { _id: id, isDeleted: false },
       req.body,
       { new: true }
     );
@@ -101,7 +101,6 @@ export const deleteBundleDetails = asyncHandler(
       res.status(400);
       throw new Error("bundleId not found");
     }
-
     const isInLiveCompetition = await Result.findOne({
       bundle_id: new mongoose.Types.ObjectId(String(bundleId)),
       isCompleted: false,
@@ -110,10 +109,8 @@ export const deleteBundleDetails = asyncHandler(
 
     if (isInLiveCompetition) {
       res.status(400)
-      throw new Error('The bundle is already using in a live competition')
+      throw new Error('This bundle is already using in a live competition')
     }
-
-
     const bundle = await Bundle.findByIdAndUpdate(
       { _id: bundleId },
       {
