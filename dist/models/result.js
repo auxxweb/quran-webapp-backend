@@ -7,20 +7,20 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const resultSchema = new mongoose_1.default.Schema({
     zone: {
         type: mongoose_1.default.Schema.Types.ObjectId,
-        ref: "Zone",
+        ref: 'Zone',
         required: true,
     },
     earliestSubmittedAt: {
-        type: String
+        type: String,
     },
     participant_id: {
         type: mongoose_1.default.Schema.Types.ObjectId,
-        ref: "Participant",
+        ref: 'Participant',
         required: true,
     },
     bundle_id: {
         type: mongoose_1.default.Schema.Types.ObjectId,
-        ref: "Bundle",
+        ref: 'Bundle',
         required: true,
     },
     startTime: {
@@ -44,5 +44,5 @@ const resultSchema = new mongoose_1.default.Schema({
         default: false,
     },
 }, { timestamps: true });
-const Result = mongoose_1.default.model("Result", resultSchema);
+const Result = mongoose_1.default.model('Result', resultSchema);
 exports.default = Result;

@@ -3,6 +3,8 @@ import asyncHandler from 'express-async-handler'
 import Judge from '../../models/judge'
 import crypto from 'crypto'
 import mongoose from 'mongoose'
+import Answer from '../../models/answers'
+import Result from '../../models/result'
 
 export const uploadJudgeDetails = asyncHandler(
   async (req: any, res: Response) => {
@@ -13,19 +15,29 @@ export const uploadJudgeDetails = asyncHandler(
       res.status(400)
       throw new Error('Please enter all the fields')
     }
-    
 
     const existJudge = await Judge.findOne({
       email,
       isDeleted: false,
     })
+
     if (existJudge) {
       res.status(400)
       throw new Error(`${email}  already exists`)
     }
-    if (isMain === true ||isMain==="true") {
+    const isLiveCompetition = await Result.findOne({
+      isDeleted: false,
+      isCompleted: false,
+      zone: new mongoose.Types.ObjectId(String(zone)),
+    })
 
-      
+    if (isLiveCompetition) {
+      res.status(400)
+      throw new Error(
+        `A live competition is happening for a participant; can't add a judge.`,
+      )
+    }
+    if (isMain === true || isMain === 'true') {
       const mainJudge = await Judge.findOne({
         zone: new mongoose.Types.ObjectId(String(zone)),
         isMain: true,
@@ -127,6 +139,17 @@ export const deletejudgeDetails = asyncHandler(
     if (!judgeId) {
       res.status(400)
       throw new Error('judgeId not found')
+    }
+
+    const isInLiveCompetition = await Answer.findOne({
+      judge_id: new mongoose.Types.ObjectId(String(judgeId)),
+      isCompleted: false,
+      isDeleted: false,
+    })
+
+    if (isInLiveCompetition) {
+      res.status(400)
+      throw new Error('The judge is already in a live competition')
     }
 
     const judge = await Judge.findByIdAndUpdate(

@@ -313,6 +313,7 @@ const answersSubmit = (req, res, next) => __awaiter(void 0, void 0, void 0, func
 });
 exports.answersSubmit = answersSubmit;
 const getParticipantQuestions = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     try {
         const { result_id } = req.params;
         const result = yield result_1.default.aggregate([
@@ -352,7 +353,7 @@ const getParticipantQuestions = (req, res, next) => __awaiter(void 0, void 0, vo
             {
                 $lookup: {
                     from: 'answers',
-                    let: { result_id: '$_id', question_id: '$questions._id' },
+                    let: { result_id: '$_id', question_id: '$questions._id', judge_id: (_a = req === null || req === void 0 ? void 0 : req.judge) === null || _a === void 0 ? void 0 : _a._id },
                     pipeline: [
                         {
                             $match: {
@@ -360,6 +361,7 @@ const getParticipantQuestions = (req, res, next) => __awaiter(void 0, void 0, vo
                                     $and: [
                                         { $eq: ['$result_id', '$$result_id'] },
                                         { $eq: ['$question_id', '$$question_id'] },
+                                        { $eq: ['$judge_id', '$$judge_id'] },
                                     ],
                                 },
                             },

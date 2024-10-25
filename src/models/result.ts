@@ -1,36 +1,36 @@
-import mongoose, { Document } from "mongoose";
+import mongoose, { Document } from 'mongoose'
 
 interface Result extends Document {
-  zone: any;
-  participant_id: any;
-  bundle_id: any;
-  startTime: any;
-  endTime: any;
-  results: any;
-  currentQuestion: string;
-  isDeleted: boolean;
-  isCompleted: boolean;
-  earliestSubmittedAt:string
+  zone: any
+  participant_id: any
+  bundle_id: any
+  startTime: any
+  endTime: any
+  results: any
+  currentQuestion: string
+  isDeleted: boolean
+  isCompleted: boolean
+  earliestSubmittedAt: string
 }
 
 const resultSchema = new mongoose.Schema<Result>(
   {
     zone: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Zone",
+      ref: 'Zone',
       required: true,
     },
-    earliestSubmittedAt:{
-type:String
+    earliestSubmittedAt: {
+      type: String,
     },
     participant_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Participant",
+      ref: 'Participant',
       required: true,
     },
     bundle_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Bundle",
+      ref: 'Bundle',
       required: true,
     },
     startTime: {
@@ -54,8 +54,8 @@ type:String
       default: false,
     },
   },
-  { timestamps: true }
-);
+  { timestamps: true },
+)
 
-const Result = mongoose.model<Result>("Result", resultSchema);
-export default Result;
+const Result = mongoose.model<Result>('Result', resultSchema)
+export default Result

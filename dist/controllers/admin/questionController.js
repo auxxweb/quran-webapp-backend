@@ -20,11 +20,11 @@ exports.uploadQuestionDetails = (0, express_async_handler_1.default)((req, res) 
     const { question, answer } = req.body;
     if (!question || !answer) {
         res.status(400);
-        throw new Error("Please enter all the fields");
+        throw new Error('Please enter all the fields');
     }
     const regExp = new RegExp(`^${question}$`);
     const existQuestion = yield question_1.default.findOne({
-        question: { $regex: regExp, $options: "" },
+        question: { $regex: regExp, $options: '' },
         isDeleted: false,
     });
     if (existQuestion) {
@@ -34,11 +34,11 @@ exports.uploadQuestionDetails = (0, express_async_handler_1.default)((req, res) 
     const newQuestion = yield question_1.default.create(Object.assign(Object.assign({}, req.body), { questionId: yield (0, app_utils_1.createQuestionId)() }));
     if (!newQuestion) {
         res.status(400);
-        throw new Error("Question upload failed");
+        throw new Error('Question upload failed');
     }
     res.status(201).json({
         success: true,
-        msg: "Question details successfully uploaded",
+        msg: 'Question details successfully uploaded',
     });
 }));
 // PATCH || update Question details
@@ -46,7 +46,7 @@ exports.updateQuestionDetails = (0, express_async_handler_1.default)((req, res) 
     const { questionId, question } = req.body;
     if (!questionId) {
         res.status(400);
-        throw new Error("Question Id  not found");
+        throw new Error('Question Id  not found');
     }
     if (question) {
         const existingQuestion = yield question_1.default.findOne({
@@ -55,28 +55,28 @@ exports.updateQuestionDetails = (0, express_async_handler_1.default)((req, res) 
         });
         if (!existingQuestion) {
             res.status(404);
-            throw new Error("Zone not found");
+            throw new Error('Zone not found');
         }
         if (existingQuestion.question !== question) {
             const regExp = new RegExp(`^${question}$`);
             const existQuestion = yield question_1.default.findOne({
-                question: { $regex: regExp, $options: "" },
+                question: { $regex: regExp, $options: '' },
                 isDeleted: false,
             });
             if (existQuestion) {
                 res.status(400);
-                throw new Error("This Question already exists");
+                throw new Error('This Question already exists');
             }
         }
     }
     const updatedQuestion = yield question_1.default.findOneAndUpdate({ _id: questionId, isDeleted: false }, req.body, { new: true });
     if (!updatedQuestion) {
         res.status(400);
-        throw new Error("Question not updated");
+        throw new Error('Question not updated');
     }
     res.status(200).json({
         success: true,
-        msg: "Question details successfully updated",
+        msg: 'Question details successfully updated',
     });
 }));
 // DELETE ||  delete question details
@@ -84,14 +84,14 @@ exports.deleteQuestionDetails = (0, express_async_handler_1.default)((req, res) 
     const { questionId } = req.query;
     if (!questionId) {
         res.status(400);
-        throw new Error("questionId not found");
+        throw new Error('questionId not found');
     }
     const question = yield question_1.default.findByIdAndUpdate({ _id: questionId }, {
         isDeleted: true,
     }, { new: true });
     if (!question) {
         res.status(400);
-        throw new Error("Deletion failed");
+        throw new Error('Deletion failed');
     }
     res.status(200).json({
         success: true,
@@ -102,14 +102,42 @@ exports.deleteQuestionDetails = (0, express_async_handler_1.default)((req, res) 
 exports.getQuestionDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    const sortBy = req.query.sortBy || "createdAt";
-    const sortOrder = req.query.sortOrder === "asc" ? 1 : -1;
-    const searchData = req.query.search || "";
-    const query = { isDeleted: false };
-    if (searchData !== "") {
-        query.questionId = { $regex: new RegExp(`^${searchData}.*`, "i") };
+    const sortBy = req.query.sortBy || 'createdAt';
+    const sortOrder = req.query.sortOrder === 'asc' ? 1 : -1;
+    let query = { isDeleted: false };
+    const searchTerm = req.query.search || '';
+    if (searchTerm) {
+        console.log(searchTerm, 'searchTerm');
+        // Normalize and escape searchTerm
+        const normalizedSearchTerm = String(searchTerm).normalize('NFC');
+        const escapedSearchTerm = normalizedSearchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // Escape special regex characters
+        console.log(normalizedSearchTerm, 'normalized', escapedSearchTerm, 'escaped');
+        // Add regex conditions if escapedSearchTerm is not empty
+        if (escapedSearchTerm) {
+            query = Object.assign(Object.assign({}, query), { $or: [
+                    {
+                        question: {
+                            $regex: new RegExp(escapedSearchTerm, 'i'),
+                        },
+                    },
+                    {
+                        questionId: {
+                            $regex: new RegExp(escapedSearchTerm, 'i'),
+                        },
+                    },
+                ] });
+        }
     }
+    // Log the final query for debugging
+    console.log(query.$or, 'Final Query');
+    // Set collation based on the detected language
+    const locale = /^[\u0600-\u06FF]/.test(searchTerm)
+        ? 'ar'
+        : /^[\u0D00-\u0D7F]/.test(searchTerm)
+            ? 'ml'
+            : 'en';
     const questions = yield question_1.default.find(query)
+        .collation({ locale, strength: 2 }) // Use appropriate collation for the detected language
         .sort({ [sortBy]: sortOrder })
         .skip((page - 1) * limit)
         .limit(limit);
@@ -119,7 +147,7 @@ exports.getQuestionDetails = (0, express_async_handler_1.default)((req, res) => 
         questions: questions || [],
         currentPage: page,
         totalPages: Math.ceil(totalDocuments / limit),
-        msg: "Questions details successfully retrieved",
+        msg: 'Questions details successfully retrieved',
     });
 }));
 // GET || get question  and ids
@@ -128,7 +156,7 @@ exports.getAllQuestionsNames = (0, express_async_handler_1.default)((req, res) =
     res.status(200).json({
         success: true,
         questions: questions || [],
-        msg: "Question details successfully retrieved",
+        msg: 'Question details successfully retrieved',
     });
 }));
 // GET || get single Question details
@@ -136,7 +164,7 @@ exports.getSingleQuestionDetails = (0, express_async_handler_1.default)((req, re
     const { questionId } = req.params;
     if (!questionId) {
         res.status(400);
-        throw new Error("questionId is required");
+        throw new Error('questionId is required');
     }
     const question = yield question_1.default.findOne({
         _id: questionId,
@@ -144,11 +172,11 @@ exports.getSingleQuestionDetails = (0, express_async_handler_1.default)((req, re
     });
     if (!question) {
         res.status(400);
-        throw new Error("Question not found");
+        throw new Error('Question not found');
     }
     res.status(200).json({
         success: true,
         question: question,
-        msg: "Question details successfully retrieved",
+        msg: 'Question details successfully retrieved',
     });
 }));

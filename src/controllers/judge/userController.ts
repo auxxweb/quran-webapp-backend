@@ -431,7 +431,7 @@ export const getParticipantQuestions = async (
       {
         $lookup: {
           from: 'answers',
-          let: { result_id: '$_id', question_id: '$questions._id' },
+          let: { result_id: '$_id', question_id: '$questions._id' , judge_id: req?.judge?._id },
           pipeline: [
             {
               $match: {
@@ -439,6 +439,7 @@ export const getParticipantQuestions = async (
                   $and: [
                     { $eq: ['$result_id', '$$result_id'] },
                     { $eq: ['$question_id', '$$question_id'] },
+                    { $eq: ['$judge_id', '$$judge_id'] },
                   ],
                 },
               },
@@ -582,6 +583,7 @@ export const getParticipantQuestions = async (
         },
       }
     ])
+
 
     if (result.length === 0) {
       return res.status(404).json({

@@ -17,6 +17,8 @@ const express_async_handler_1 = __importDefault(require("express-async-handler")
 const judge_1 = __importDefault(require("../../models/judge"));
 const crypto_1 = __importDefault(require("crypto"));
 const mongoose_1 = __importDefault(require("mongoose"));
+const answers_1 = __importDefault(require("../../models/answers"));
+const result_1 = __importDefault(require("../../models/result"));
 exports.uploadJudgeDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     const { name, email, phone, address, gender, zone, isMain } = req.body;
@@ -34,7 +36,16 @@ exports.uploadJudgeDetails = (0, express_async_handler_1.default)((req, res) => 
         res.status(400);
         throw new Error(`${email}  already exists`);
     }
-    if (isMain === true || isMain === "true") {
+    const isLiveCompetition = yield result_1.default.findOne({
+        isDeleted: false,
+        isCompleted: false,
+        zone: new mongoose_1.default.Types.ObjectId(String(zone)),
+    });
+    if (isLiveCompetition) {
+        res.status(400);
+        throw new Error(`A live competition is happening for a participant; can't add a judge.`);
+    }
+    if (isMain === true || isMain === 'true') {
         const mainJudge = yield judge_1.default.findOne({
             zone: new mongoose_1.default.Types.ObjectId(String(zone)),
             isMain: true,
@@ -114,6 +125,15 @@ exports.deletejudgeDetails = (0, express_async_handler_1.default)((req, res) => 
     if (!judgeId) {
         res.status(400);
         throw new Error('judgeId not found');
+    }
+    const isInLiveCompetition = yield answers_1.default.findOne({
+        judge_id: new mongoose_1.default.Types.ObjectId(String(judgeId)),
+        isCompleted: false,
+        isDeleted: false,
+    });
+    if (isInLiveCompetition) {
+        res.status(400);
+        throw new Error('The judge is already in a live competition');
     }
     const judge = yield judge_1.default.findByIdAndUpdate({ _id: judgeId }, {
         isDeleted: true,

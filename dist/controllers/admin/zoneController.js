@@ -17,15 +17,17 @@ const express_async_handler_1 = __importDefault(require("express-async-handler")
 const uniqid_1 = __importDefault(require("uniqid"));
 const store_1 = __importDefault(require("store"));
 const zones_1 = __importDefault(require("../../models/zones"));
+const mongoose_1 = __importDefault(require("mongoose"));
+const result_1 = __importDefault(require("../../models/result"));
 exports.uploadZoneDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { name, description } = req.body;
     if (!name || !description) {
         res.status(400);
-        throw new Error("Please enter all the fields");
+        throw new Error('Please enter all the fields');
     }
     const regExp = new RegExp(`^${name.trim()}$`);
     const existZone = yield zones_1.default.findOne({
-        name: { $regex: regExp, $options: "i" },
+        name: { $regex: regExp, $options: 'i' },
         isDeleted: false,
     });
     if (existZone) {
@@ -33,15 +35,15 @@ exports.uploadZoneDetails = (0, express_async_handler_1.default)((req, res) => _
         throw new Error(`${name} zone already exists`);
     }
     let tx_uuid = (0, uniqid_1.default)();
-    store_1.default.set("uuid", { tx: tx_uuid });
+    store_1.default.set('uuid', { tx: tx_uuid });
     const zone = yield zones_1.default.create(Object.assign(Object.assign({}, req.body), { url: `${tx_uuid}` }));
     if (!zone) {
         res.status(400);
-        throw new Error("Zone upload failed");
+        throw new Error('Zone upload failed');
     }
     res.status(201).json({
         success: true,
-        msg: "Zone details successfully uploaded",
+        msg: 'Zone details successfully uploaded',
     });
 }));
 // PATCH || update Zone details
@@ -49,7 +51,7 @@ exports.updateZoneDetails = (0, express_async_handler_1.default)((req, res) => _
     const { zoneId, name } = req.body;
     if (!zoneId) {
         res.status(400);
-        throw new Error("Zone Id  not found");
+        throw new Error('Zone Id  not found');
     }
     if (name) {
         const zone = yield zones_1.default.findOne({
@@ -58,28 +60,28 @@ exports.updateZoneDetails = (0, express_async_handler_1.default)((req, res) => _
         });
         if (!zone) {
             res.status(404);
-            throw new Error("Zone not found");
+            throw new Error('Zone not found');
         }
         if (zone.name !== name) {
             const regExp = new RegExp(`^${name}$`);
             const existZone = yield zones_1.default.findOne({
-                name: { $regex: regExp, $options: "" },
+                name: { $regex: regExp, $options: '' },
                 isDeleted: false,
             });
             if (existZone) {
                 res.status(400);
-                throw new Error("This zone already exists");
+                throw new Error('This zone already exists');
             }
         }
     }
     const updatedZone = yield zones_1.default.findOneAndUpdate({ _id: zoneId, isDeleted: false }, Object.assign({}, req.body), { new: true });
     if (!updatedZone) {
         res.status(400);
-        throw new Error("Zone not updated");
+        throw new Error('Zone not updated');
     }
     res.status(200).json({
         success: true,
-        msg: "Zone details successfully updated",
+        msg: 'Zone details successfully updated',
     });
 }));
 // DELETE ||  delete zone details
@@ -87,14 +89,23 @@ exports.deleteZoneDetails = (0, express_async_handler_1.default)((req, res) => _
     const { zoneId } = req.query;
     if (!zoneId) {
         res.status(400);
-        throw new Error("zoneId not found");
+        throw new Error('zoneId not found');
+    }
+    const isInLiveCompetition = yield result_1.default.findOne({
+        zone: new mongoose_1.default.Types.ObjectId(String(zoneId)),
+        isCompleted: false,
+        isDeleted: false,
+    });
+    if (isInLiveCompetition) {
+        res.status(400);
+        throw new Error("Live competition in this zone; can't delete.");
     }
     const zone = yield zones_1.default.findByIdAndUpdate({ _id: zoneId }, {
         isDeleted: true,
     }, { new: true });
     if (!zone) {
         res.status(400);
-        throw new Error("Deletion failed");
+        throw new Error('Deletion failed');
     }
     res.status(200).json({
         success: true,
@@ -105,12 +116,12 @@ exports.deleteZoneDetails = (0, express_async_handler_1.default)((req, res) => _
 exports.getZoneDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    const sortBy = req.query.sortBy || "createdAt";
-    const sortOrder = req.query.sortOrder === "asc" ? 1 : -1;
-    const searchData = req.query.search || "";
+    const sortBy = req.query.sortBy || 'createdAt';
+    const sortOrder = req.query.sortOrder === 'asc' ? 1 : -1;
+    const searchData = req.query.search || '';
     const query = { isDeleted: false };
-    if (searchData !== "") {
-        query.name = { $regex: new RegExp(`^${searchData}.*`, "i") };
+    if (searchData !== '') {
+        query.name = { $regex: new RegExp(`^${searchData}.*`, 'i') };
     }
     const zones = yield zones_1.default.find(query)
         .sort({ [sortBy]: sortOrder })
@@ -122,7 +133,7 @@ exports.getZoneDetails = (0, express_async_handler_1.default)((req, res) => __aw
         zones: zones || [],
         currentPage: page,
         totalPages: Math.ceil(totalDocuments / limit),
-        msg: "Zone details successfully retrieved",
+        msg: 'Zone details successfully retrieved',
     });
 }));
 // GET || get Zones names and ids
@@ -131,6 +142,6 @@ exports.getAllZonesNames = (0, express_async_handler_1.default)((req, res) => __
     res.status(200).json({
         success: true,
         zones: zones || [],
-        msg: "Zone details successfully retrieved",
+        msg: 'Zone details successfully retrieved',
     });
 }));
