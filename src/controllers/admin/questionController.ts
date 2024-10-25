@@ -153,7 +153,7 @@ export const getAllQuestionsNames = asyncHandler(
   async (req: Request, res: Response) => {
     const questions = await Question.find(
       { isDeleted: false },
-      { question: 1 }
+      { question: 1,questionId:1 }
     );
 
     res.status(200).json({

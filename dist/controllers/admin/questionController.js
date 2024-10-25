@@ -124,7 +124,7 @@ exports.getQuestionDetails = (0, express_async_handler_1.default)((req, res) => 
 }));
 // GET || get question  and ids
 exports.getAllQuestionsNames = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const questions = yield question_1.default.find({ isDeleted: false }, { question: 1 });
+    const questions = yield question_1.default.find({ isDeleted: false }, { question: 1, questionId: 1 });
     res.status(200).json({
         success: true,
         questions: questions || [],
