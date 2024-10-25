@@ -69,10 +69,10 @@ exports.uploadJudgeDetails = (0, express_async_handler_1.default)((req, res) => 
 }));
 // PATCH || update Judge details
 exports.updateJudgeDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
+    var _b, _c;
     const { judgeId, email, isMain, zone } = req.body;
     const { image } = req.files || {};
-    const imageUrl = image && ((_a = image[0]) === null || _a === void 0 ? void 0 : _a.location);
+    const imageUrl = image && ((_b = image[0]) === null || _b === void 0 ? void 0 : _b.location);
     if (!judgeId) {
         res.status(400);
         throw new Error('Judge Id  not found');
@@ -106,7 +106,7 @@ exports.updateJudgeDetails = (0, express_async_handler_1.default)((req, res) => 
         }).populate('zone');
         if (mainJudge) {
             res.status(400);
-            throw new Error(`A main judge already exists in zone ${(_b = mainJudge === null || mainJudge === void 0 ? void 0 : mainJudge.zone) === null || _b === void 0 ? void 0 : _b.name}`);
+            throw new Error(`A main judge already exists in zone ${(_c = mainJudge === null || mainJudge === void 0 ? void 0 : mainJudge.zone) === null || _c === void 0 ? void 0 : _c.name}`);
         }
     }
     const updatedJudge = yield judge_1.default.findOneAndUpdate({ _id: judgeId, isDeleted: false }, Object.assign(Object.assign({}, req.body), { image: imageUrl && imageUrl }), { new: true });

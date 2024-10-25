@@ -16,6 +16,8 @@ exports.getSingleBundleDetails = exports.getBundleDetails = exports.deleteBundle
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const bundle_1 = __importDefault(require("../../models/bundle"));
 const app_utils_1 = require("../../utils/app.utils");
+const result_1 = __importDefault(require("../../models/result"));
+const mongoose_1 = __importDefault(require("mongoose"));
 exports.uploadBundleDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { questions, title } = req.body;
     if (!questions || !title) {
@@ -43,14 +45,14 @@ exports.uploadBundleDetails = (0, express_async_handler_1.default)((req, res) =>
 }));
 // PATCH || update Bundle details
 exports.updateBundleDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { bundleId, title } = req.body;
-    if (!bundleId) {
+    const { id, title } = req.body;
+    if (!id) {
         res.status(400);
         throw new Error("Bundle Id  not found");
     }
     if (title) {
         const bundle = yield bundle_1.default.findOne({
-            _id: bundleId,
+            _id: id,
             isDeleted: false,
         });
         if (!bundle) {
@@ -69,7 +71,7 @@ exports.updateBundleDetails = (0, express_async_handler_1.default)((req, res) =>
             }
         }
     }
-    const updatedBundle = yield bundle_1.default.findOneAndUpdate({ _id: bundleId, isDeleted: false }, req.body, { new: true });
+    const updatedBundle = yield bundle_1.default.findOneAndUpdate({ _id: id, isDeleted: false }, req.body, { new: true });
     if (!updatedBundle) {
         res.status(400);
         throw new Error("Bundle not updated");
@@ -85,6 +87,15 @@ exports.deleteBundleDetails = (0, express_async_handler_1.default)((req, res) =>
     if (!bundleId) {
         res.status(400);
         throw new Error("bundleId not found");
+    }
+    const isInLiveCompetition = yield result_1.default.findOne({
+        bundle_id: new mongoose_1.default.Types.ObjectId(String(bundleId)),
+        isCompleted: false,
+        isDeleted: false,
+    });
+    if (isInLiveCompetition) {
+        res.status(400);
+        throw new Error('This bundle is already using in a live competition');
     }
     const bundle = yield bundle_1.default.findByIdAndUpdate({ _id: bundleId }, {
         isDeleted: true,
