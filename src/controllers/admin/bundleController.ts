@@ -41,15 +41,15 @@ export const uploadBundleDetails = asyncHandler(
 
 export const updateBundleDetails = asyncHandler(
   async (req: Request, res: Response) => {
-    const { bundleId, title } = req.body;
+    const { id, title } = req.body;
 
-    if (!bundleId) {
+    if (!id) {
       res.status(400);
       throw new Error("Bundle Id  not found");
     }
     if (title) {
       const bundle = await Bundle.findOne({
-        _id: bundleId,
+        _id: id,
         isDeleted: false,
       });
       if (!bundle) {
@@ -73,7 +73,7 @@ export const updateBundleDetails = asyncHandler(
     }
 
     const updatedBundle = await Bundle.findOneAndUpdate(
-      { _id: bundleId, isDeleted: false },
+      { _id: id, isDeleted: false },
       req.body,
       { new: true }
     );

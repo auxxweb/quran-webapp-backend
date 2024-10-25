@@ -42,15 +42,15 @@ export const uploadQuestionDetails = asyncHandler(
 
 export const updateQuestionDetails = asyncHandler(
   async (req: Request, res: Response) => {
-    const { questionId, question } = req.body
+    const { id, question } = req.body
 
-    if (!questionId) {
+    if (!id) {
       res.status(400)
       throw new Error('Question Id  not found')
     }
     if (question) {
       const existingQuestion = await Question.findOne({
-        _id: questionId,
+        _id: id,
         isDeleted: false,
       })
       if (!existingQuestion) {
@@ -74,7 +74,7 @@ export const updateQuestionDetails = asyncHandler(
     }
 
     const updatedQuestion = await Question.findOneAndUpdate(
-      { _id: questionId, isDeleted: false },
+      { _id: id, isDeleted: false },
       req.body,
       { new: true },
     )
