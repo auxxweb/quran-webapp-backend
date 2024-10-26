@@ -69,7 +69,7 @@ exports.uploadJudgeDetails = (0, express_async_handler_1.default)((req, res) => 
 }));
 // PATCH || update Judge details
 exports.updateJudgeDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
+    var _a;
     const { judgeId, email, isMain, zone } = req.body;
     const { image } = req.files || {};
     const imageUrl = image && ((_a = image[0]) === null || _a === void 0 ? void 0 : _a.location);
@@ -98,16 +98,19 @@ exports.updateJudgeDetails = (0, express_async_handler_1.default)((req, res) => 
         }
     }
     if ((isMain === true || isMain === 'true') && zone) {
-        const mainJudge = yield judge_1.default.findOne({
-            zone: zone,
-            isMain: true,
+        const isLiveCompetition = yield result_1.default.findOne({
             isDeleted: false,
-            _id: { $ne: judgeId },
-        }).populate('zone');
-        if (mainJudge) {
+            isCompleted: false,
+            zone: new mongoose_1.default.Types.ObjectId(String(zone)),
+        });
+        console.log(isLiveCompetition, "livee");
+        if (isLiveCompetition) {
             res.status(400);
-            throw new Error(`A main judge already exists in zone ${(_b = mainJudge === null || mainJudge === void 0 ? void 0 : mainJudge.zone) === null || _b === void 0 ? void 0 : _b.name}`);
+            throw new Error(`A live competition is happening for a judge; can't change.`);
         }
+    }
+    if ((isMain === true || isMain === 'true') && zone) {
+        yield judge_1.default.findOneAndUpdate({ isMain: true, isDeleted: false, _id: { $ne: judgeId } }, { isMain: false }, { new: true });
     }
     const updatedJudge = yield judge_1.default.findOneAndUpdate({ _id: judgeId, isDeleted: false }, Object.assign(Object.assign({}, req.body), { image: imageUrl && imageUrl }), { new: true });
     if (!updatedJudge) {

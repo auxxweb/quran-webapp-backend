@@ -140,11 +140,34 @@ exports.getZoneDetails = (0, express_async_handler_1.default)((req, res) => __aw
     if (searchData !== '') {
         query.name = { $regex: new RegExp(`^${searchData}.*`, 'i') };
     }
-    const zones = yield zones_1.default.find(query)
-        .sort({ [sortBy]: sortOrder })
-        .skip((page - 1) * limit)
-        .limit(limit);
+    const zones = yield zones_1.default.aggregate([
+        // Match the initial query
+        { $match: query },
+        // Lookup judges to check for main judges
+        {
+            $lookup: {
+                from: 'judges', // Make sure this matches your Judge collection name
+                localField: '_id',
+                foreignField: 'zone',
+                as: 'judges'
+            }
+        },
+        // Add a field to check for main judges
+        {
+            $addFields: {
+                mainJudge: {
+                    $gt: [{ $size: { $filter: { input: '$judges', cond: { $eq: ['$$this.isMain', true] } } } }, 0]
+                }
+            }
+        },
+        // Sort the results
+        { $sort: { [sortBy]: sortOrder } },
+        // Paginate the results
+        { $skip: (page - 1) * limit },
+        { $limit: limit }
+    ]);
     const totalDocuments = yield zones_1.default.countDocuments(query);
+    console.log(zones, "zones");
     res.status(200).json({
         success: true,
         zones: zones || [],

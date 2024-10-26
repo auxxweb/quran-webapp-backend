@@ -101,18 +101,27 @@ export const updateJudgeDetails = asyncHandler(
     }
 
     if ((isMain === true || isMain === 'true') && zone) {
-      const mainJudge = await Judge.findOne({
-        zone: zone,
-        isMain: true,
+      const isLiveCompetition = await Result.findOne({
         isDeleted: false,
-        _id: { $ne: judgeId },
-      }).populate('zone')
-      if (mainJudge) {
+        isCompleted: false,
+        zone: new mongoose.Types.ObjectId(String(zone)),
+      })
+      console.log(isLiveCompetition,"livee");
+      
+  
+      if (isLiveCompetition) {
         res.status(400)
         throw new Error(
-          `A main judge already exists in zone ${mainJudge?.zone?.name}`,
+          `A live competition is happening for a judge; can't change.`,
         )
       }
+    }
+    if ((isMain === true || isMain === 'true') && zone) {
+      await Judge.findOneAndUpdate(
+        { isMain: true, isDeleted: false, _id: { $ne: judgeId } },
+        { isMain: false },
+        { new: true },
+      )
     }
 
     const updatedJudge = await Judge.findOneAndUpdate(
@@ -120,6 +129,7 @@ export const updateJudgeDetails = asyncHandler(
       { ...req.body, image: imageUrl && imageUrl },
       { new: true },
     )
+
     if (!updatedJudge) {
       res.status(400)
       throw new Error('Judge not updated')
