@@ -99,7 +99,7 @@ const PORT = process.env.PORT || 5000;
 // app.listen(PORT, () => console.log(`listening on ${PORT}`));
 const server = app.listen(PORT, () => console.log(`listening on ${PORT}`));
 exports.io = new socket_io_1.Server(server, {
-    pingTimeout: 60000,
+    pingTimeout: 600000000,
     cors: {
         origin: '*',
         methods: ['GET', 'POST', 'PATCH', 'DELETE'],
