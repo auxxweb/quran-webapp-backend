@@ -91,8 +91,12 @@ exports.deleteParticipantDetails = (0, express_async_handler_1.default)((req, re
         res.status(400);
         throw new Error('participantId not found');
     }
+    const existParticipant = yield participant_1.default.findOne({
+        _id: new mongoose_1.default.Types.ObjectId(String(participantId)),
+        isDeleted: false,
+    });
     const isInLiveCompetition = yield result_1.default.findOne({
-        participant_id: new mongoose_1.default.Types.ObjectId(String(participantId)),
+        zone: new mongoose_1.default.Types.ObjectId(String(existParticipant === null || existParticipant === void 0 ? void 0 : existParticipant.zone)),
         isCompleted: false,
         isDeleted: false,
     });

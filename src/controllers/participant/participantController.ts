@@ -109,6 +109,7 @@ export const getQuestion = async (
         success: false,
       });
     }
+console.log(result?.bundle_id?.questions,"result?.bundle_id?.questions");
 
     // Find the index of the question in the populated bundle that matches questionId
     const questionIndex = result?.bundle_id?.questions?.findIndex(

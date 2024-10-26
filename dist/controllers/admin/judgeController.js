@@ -17,7 +17,6 @@ const express_async_handler_1 = __importDefault(require("express-async-handler")
 const judge_1 = __importDefault(require("../../models/judge"));
 const crypto_1 = __importDefault(require("crypto"));
 const mongoose_1 = __importDefault(require("mongoose"));
-const answers_1 = __importDefault(require("../../models/answers"));
 const result_1 = __importDefault(require("../../models/result"));
 exports.uploadJudgeDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
@@ -126,17 +125,16 @@ exports.deletejudgeDetails = (0, express_async_handler_1.default)((req, res) => 
         res.status(400);
         throw new Error('judgeId not found');
     }
-    const isMainJudge = yield judge_1.default.findOne({
+    const existJudge = yield judge_1.default.findOne({
         _id: new mongoose_1.default.Types.ObjectId(String(judgeId)),
         isDeleted: false,
-        isMain: true,
     });
-    if (isMainJudge) {
+    if ((existJudge === null || existJudge === void 0 ? void 0 : existJudge.isMain) === true) {
         res.status(400);
         throw new Error(`Can't delete the main judge.`);
     }
-    const isInLiveCompetition = yield answers_1.default.findOne({
-        judge_id: new mongoose_1.default.Types.ObjectId(String(judgeId)),
+    const isInLiveCompetition = yield result_1.default.findOne({
+        zone: new mongoose_1.default.Types.ObjectId(String(existJudge === null || existJudge === void 0 ? void 0 : existJudge.zone)),
         isCompleted: false,
         isDeleted: false,
     });

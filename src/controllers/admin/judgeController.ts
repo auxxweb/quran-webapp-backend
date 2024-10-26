@@ -142,19 +142,18 @@ export const deletejudgeDetails = asyncHandler(
       throw new Error('judgeId not found')
     }
 
-    const isMainJudge = await Judge.findOne({
+    const existJudge = await Judge.findOne({
       _id: new mongoose.Types.ObjectId(String(judgeId)),
       isDeleted: false,
-      isMain: true,
     })
 
-    if (isMainJudge) {
+    if (existJudge?.isMain === true) {
       res.status(400)
       throw new Error(`Can't delete the main judge.`)
     }
 
-    const isInLiveCompetition = await Answer.findOne({
-      judge_id: new mongoose.Types.ObjectId(String(judgeId)),
+    const isInLiveCompetition = await Result.findOne({
+      zone: new mongoose.Types.ObjectId(String(existJudge?.zone)),
       isCompleted: false,
       isDeleted: false,
     })

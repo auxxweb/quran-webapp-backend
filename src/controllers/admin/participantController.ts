@@ -99,9 +99,13 @@ export const deleteParticipantDetails = asyncHandler(
       res.status(400)
       throw new Error('participantId not found')
     }
+    const existParticipant = await Participant.findOne({
+      _id: new mongoose.Types.ObjectId(String(participantId)),
+      isDeleted: false,
+    })
 
     const isInLiveCompetition = await Result.findOne({
-      participant_id: new mongoose.Types.ObjectId(String(participantId)),
+      zone: new mongoose.Types.ObjectId(String(existParticipant?.zone)),
       isCompleted: false,
       isDeleted: false,
     })
