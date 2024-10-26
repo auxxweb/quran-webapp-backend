@@ -19,6 +19,7 @@ export const uploadJudgeDetails = asyncHandler(
     const existJudge = await Judge.findOne({
       email,
       isDeleted: false,
+      zone: new mongoose.Types.ObjectId(String(zone)),
     })
 
     if (existJudge) {

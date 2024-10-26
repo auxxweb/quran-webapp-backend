@@ -29,6 +29,7 @@ exports.uploadParticipantDetails = (0, express_async_handler_1.default)((req, re
     const existParticipant = yield participant_1.default.findOne({
         email,
         isDeleted: false,
+        zone: new mongoose_1.default.Types.ObjectId(String(zone)),
     });
     if (existParticipant) {
         res.status(400);
@@ -46,10 +47,10 @@ exports.uploadParticipantDetails = (0, express_async_handler_1.default)((req, re
 }));
 // PATCH || update Participant details
 exports.updateParticipantDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _b;
+    var _a;
     const { participantId, email } = req.body;
     const { image } = req.files || {};
-    const imageUrl = image && ((_b = image[0]) === null || _b === void 0 ? void 0 : _b.location);
+    const imageUrl = image && ((_a = image[0]) === null || _a === void 0 ? void 0 : _a.location);
     if (!participantId) {
         res.status(400);
         throw new Error('Participant Id  not found');

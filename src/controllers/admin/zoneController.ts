@@ -6,6 +6,8 @@ import store from 'store'
 import Zone from '../../models/zones'
 import mongoose from 'mongoose'
 import Result from '../../models/result'
+import Judge from '../../models/judge'
+import Participant from '../../models/participant'
 
 export const uploadZoneDetails = asyncHandler(
   async (req: Request, res: Response) => {
@@ -112,22 +114,52 @@ export const deleteZoneDetails = asyncHandler(
       throw new Error("Live competition in this zone; can't delete.")
     }
 
-    const zone = await Zone.findByIdAndUpdate(
-      { _id: zoneId },
-      {
-        isDeleted: true,
-      },
-      { new: true },
-    )
-    if (!zone) {
-      res.status(400)
-      throw new Error('Deletion failed')
+    try {
+      // Update the zone to mark it as deleted
+      const updatedZone = await Zone.findByIdAndUpdate(
+        zoneId,
+        { isDeleted: true },
+        { new: true }
+      );
+    
+      // Update judges and participants in parallel
+     await Promise.all([
+        Judge.updateMany(
+          { zone: new mongoose.Types.ObjectId(String(zoneId)) },
+          { isDeleted: true }
+        ),
+        Participant.updateMany(
+          { zone: new mongoose.Types.ObjectId(String(zoneId)) },
+          { isDeleted: true }
+        ),
+      ]);
+    
+      res.status(200).json({
+        success: true,
+        msg: `${updatedZone?.name} zone successfully deleted`,
+      })
+    } catch (error) {
+      // Rollback changes if an error occurs
+      await Promise.all([
+        Zone.findByIdAndUpdate(zoneId, { isDeleted: false }),
+        Judge.updateMany(
+          { zone: new mongoose.Types.ObjectId(String(zoneId)) },
+          { isDeleted: true }
+        ),
+        Participant.updateMany(
+          { zone: new mongoose.Types.ObjectId(String(zoneId)) },
+          { isDeleted: true }
+        ),
+      ]);
+    
+      res.status(400).json({ message: 'Deletion failed' });
     }
+    
 
-    res.status(200).json({
-      success: true,
-      msg: `${zone?.name} successfully deleted`,
-    })
+    // if (!zone) {
+    //   res.status(400)
+    //   throw new Error('Deletion failed')
+    // }
   },
 )
 
