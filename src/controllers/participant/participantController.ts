@@ -84,22 +84,26 @@ export const getQuestion = async (
   try {
     const { questionId, resultId } = req.params;
 
-    // Check if the IDs are valid ObjectIds
-    if (!mongoose.Types.ObjectId.isValid(questionId) || !mongoose.Types.ObjectId.isValid(resultId)) {
+    // Validate IDs
+    if (
+      !mongoose.Types.ObjectId.isValid(questionId) ||
+      !mongoose.Types.ObjectId.isValid(resultId)
+    ) {
       return res.status(400).json({
         message: "Invalid Question or Result ID",
         success: false,
       });
     }
 
-    // Find the result, populate zone, participant, and bundle with the full question details
+    // Find and populate necessary fields
     const result = await Result.findOne({ _id: resultId, isDeleted: false })
       .populate("zone", "name")
       .populate("participant_id", "name image")
       .populate({
         path: "bundle_id",
         populate: {
-          path: "questions",select:"question" // Fully populate questions within bundle
+          path: "questions",
+          select: "question", // Populate only the question field
         },
       });
 
@@ -109,14 +113,13 @@ export const getQuestion = async (
         success: false,
       });
     }
-console.log(result?.bundle_id?.questions,"result?.bundle_id?.questions");
 
-    // Find the index of the question in the populated bundle that matches questionId
-    const questionIndex = result?.bundle_id?.questions?.findIndex(
-      (question:any) => question?._id.toString() === questionId
+    result?.bundle_id?.questions?.sort((a: any, b: any) => a?._id?.toString()?.localeCompare(b?._id.toString()));
+
+    const questionIndex = result.bundle_id.questions.findIndex(
+      (question: any) => question._id.toString() === questionId
     );
 
-    // Check if the question was found in the array
     if (questionIndex === -1) {
       return res.status(404).json({
         message: "Question not found in the bundle",
@@ -124,14 +127,15 @@ console.log(result?.bundle_id?.questions,"result?.bundle_id?.questions");
       });
     }
 
-    // Get the question at the found index
-    const matchingQuestion = result?.bundle_id?.questions[questionIndex];
+    // Get the matched question
+    const matchingQuestion = result.bundle_id.questions[questionIndex];
 
+    // Send response with the question number based on the sorted order
     return res.status(200).json({
       message: "Question fetched successfully",
       result: {
         question: matchingQuestion,
-        questionNumber: questionIndex + 1, 
+        questionNumber: questionIndex + 1,
         zone: result.zone,
         participant: result.participant_id,
       },

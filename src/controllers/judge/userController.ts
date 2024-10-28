@@ -190,6 +190,7 @@ export const proceedToQuestion = async (
         startTime,
         zone: req.judge.zone,
         currentQuestion: firstQuestion,
+        mainJudge: req.judge?._id,
       })
       await result.save()
 

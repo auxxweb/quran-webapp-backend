@@ -90,7 +90,7 @@ const getUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.getUser = getUser;
 const proceedToQuestion = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
+    var _a, _b, _c;
     try {
         const result_dto = (0, class_transformer_1.plainToClass)(resultDto_1.ResultDto, (_a = req.body) !== null && _a !== void 0 ? _a : {});
         const error_messages = yield (0, class_validator_1.validate)(result_dto);
@@ -171,6 +171,7 @@ const proceedToQuestion = (req, res, next) => __awaiter(void 0, void 0, void 0, 
                 startTime,
                 zone: req.judge.zone,
                 currentQuestion: firstQuestion,
+                mainJudge: (_c = req.judge) === null || _c === void 0 ? void 0 : _c._id,
             });
             yield result.save();
             const judges = yield judge_1.default.find({ zone: req.judge.zone, isDeleted: false }, { _id: 1 });
@@ -283,9 +284,9 @@ const proceedToNextQuestion = (req, res, next) => __awaiter(void 0, void 0, void
 });
 exports.proceedToNextQuestion = proceedToNextQuestion;
 const answersSubmit = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _c;
+    var _d;
     try {
-        const answers_dto = (0, class_transformer_1.plainToClass)(answers_2.AnswersDto, (_c = req.body) !== null && _c !== void 0 ? _c : {});
+        const answers_dto = (0, class_transformer_1.plainToClass)(answers_2.AnswersDto, (_d = req.body) !== null && _d !== void 0 ? _d : {});
         const error_messages = yield (0, class_validator_1.validate)(answers_dto);
         if (error_messages && error_messages.length > 0) {
             const error = yield (0, handleValidationErrors_1.handleValidationErrors)(res, error_messages);
@@ -318,7 +319,7 @@ const answersSubmit = (req, res, next) => __awaiter(void 0, void 0, void 0, func
 });
 exports.answersSubmit = answersSubmit;
 const getParticipantQuestions = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _d;
+    var _e;
     try {
         const { result_id } = req.params;
         const result = yield result_1.default.aggregate([
@@ -361,7 +362,7 @@ const getParticipantQuestions = (req, res, next) => __awaiter(void 0, void 0, vo
                     let: {
                         result_id: '$_id',
                         question_id: '$questions._id',
-                        judge_id: (_d = req === null || req === void 0 ? void 0 : req.judge) === null || _d === void 0 ? void 0 : _d._id,
+                        judge_id: (_e = req === null || req === void 0 ? void 0 : req.judge) === null || _e === void 0 ? void 0 : _e._id,
                     },
                     pipeline: [
                         {
@@ -532,7 +533,7 @@ const getParticipantQuestions = (req, res, next) => __awaiter(void 0, void 0, vo
 });
 exports.getParticipantQuestions = getParticipantQuestions;
 const getParticipantQuestionsByZone = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _e;
+    var _f;
     try {
         const { zone_id } = req.params;
         const data = yield result_1.default.aggregate([
@@ -546,7 +547,7 @@ const getParticipantQuestionsByZone = (req, res, next) => __awaiter(void 0, void
             {
                 $lookup: {
                     from: 'answers',
-                    let: { result_id: '$_id', judge_id: (_e = req === null || req === void 0 ? void 0 : req.judge) === null || _e === void 0 ? void 0 : _e._id },
+                    let: { result_id: '$_id', judge_id: (_f = req === null || req === void 0 ? void 0 : req.judge) === null || _f === void 0 ? void 0 : _f._id },
                     pipeline: [
                         {
                             $match: {

@@ -23,6 +23,11 @@ const resultSchema = new mongoose_1.default.Schema({
         ref: 'Bundle',
         required: true,
     },
+    mainJudge: {
+        type: mongoose_1.default.Schema.Types.ObjectId,
+        ref: 'Judge',
+        required: true,
+    },
     startTime: {
         type: Date,
         required: true,

@@ -73,24 +73,26 @@ const getUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.getUser = getUser;
 const getQuestion = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d;
+    var _a, _b;
     try {
         const { questionId, resultId } = req.params;
-        // Check if the IDs are valid ObjectIds
-        if (!mongoose_1.default.Types.ObjectId.isValid(questionId) || !mongoose_1.default.Types.ObjectId.isValid(resultId)) {
+        // Validate IDs
+        if (!mongoose_1.default.Types.ObjectId.isValid(questionId) ||
+            !mongoose_1.default.Types.ObjectId.isValid(resultId)) {
             return res.status(400).json({
                 message: "Invalid Question or Result ID",
                 success: false,
             });
         }
-        // Find the result, populate zone, participant, and bundle with the full question details
+        // Find and populate necessary fields
         const result = yield result_1.default.findOne({ _id: resultId, isDeleted: false })
             .populate("zone", "name")
             .populate("participant_id", "name image")
             .populate({
             path: "bundle_id",
             populate: {
-                path: "questions", select: "question" // Fully populate questions within bundle
+                path: "questions",
+                select: "question", // Populate only the question field
             },
         });
         if (!result) {
@@ -99,18 +101,17 @@ const getQuestion = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
                 success: false,
             });
         }
-        console.log((_a = result === null || result === void 0 ? void 0 : result.bundle_id) === null || _a === void 0 ? void 0 : _a.questions, "result?.bundle_id?.questions");
-        // Find the index of the question in the populated bundle that matches questionId
-        const questionIndex = (_c = (_b = result === null || result === void 0 ? void 0 : result.bundle_id) === null || _b === void 0 ? void 0 : _b.questions) === null || _c === void 0 ? void 0 : _c.findIndex((question) => (question === null || question === void 0 ? void 0 : question._id.toString()) === questionId);
-        // Check if the question was found in the array
+        (_b = (_a = result === null || result === void 0 ? void 0 : result.bundle_id) === null || _a === void 0 ? void 0 : _a.questions) === null || _b === void 0 ? void 0 : _b.sort((a, b) => { var _a, _b; return (_b = (_a = a === null || a === void 0 ? void 0 : a._id) === null || _a === void 0 ? void 0 : _a.toString()) === null || _b === void 0 ? void 0 : _b.localeCompare(b === null || b === void 0 ? void 0 : b._id.toString()); });
+        const questionIndex = result.bundle_id.questions.findIndex((question) => question._id.toString() === questionId);
         if (questionIndex === -1) {
             return res.status(404).json({
                 message: "Question not found in the bundle",
                 success: false,
             });
         }
-        // Get the question at the found index
-        const matchingQuestion = (_d = result === null || result === void 0 ? void 0 : result.bundle_id) === null || _d === void 0 ? void 0 : _d.questions[questionIndex];
+        // Get the matched question
+        const matchingQuestion = result.bundle_id.questions[questionIndex];
+        // Send response with the question number based on the sorted order
         return res.status(200).json({
             message: "Question fetched successfully",
             result: {

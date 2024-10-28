@@ -7,6 +7,7 @@ interface Result extends Document {
   startTime: any
   endTime: any
   results: any
+  mainJudge: any
   currentQuestion: string
   isDeleted: boolean
   isCompleted: boolean
@@ -31,6 +32,11 @@ const resultSchema = new mongoose.Schema<Result>(
     bundle_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Bundle',
+      required: true,
+    },
+    mainJudge: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Judge',
       required: true,
     },
     startTime: {
